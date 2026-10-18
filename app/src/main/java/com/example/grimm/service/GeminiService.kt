@@ -1,5 +1,6 @@
 package com.example.grimm.service
 
+import android.util.Log
 import com.example.BuildConfig
 import com.example.grimm.model.AiPersona
 import com.example.grimm.model.AiTone
@@ -16,12 +17,189 @@ import java.util.concurrent.TimeUnit
 
 class GeminiService {
     private val client = OkHttpClient.Builder()
-        .connectTimeout(30, TimeUnit.SECONDS)
-        .readTimeout(30, TimeUnit.SECONDS)
-        .writeTimeout(30, TimeUnit.SECONDS)
+        .connectTimeout(25, TimeUnit.SECONDS)
+        .readTimeout(25, TimeUnit.SECONDS)
+        .writeTimeout(25, TimeUnit.SECONDS)
         .build()
 
     private val jsonMediaType = "application/json; charset=utf-8".toMediaType()
+
+    // Highly reliable, fast modern models tested against AI Studio key
+    private val candidateModels = listOf(
+        "gemini-3.5-flash-lite",
+        "gemini-3.1-flash-lite",
+        "gemini-3-flash-preview"
+    )
+
+    companion object {
+        fun isUserReaperIntroduction(prompt: String): Boolean {
+            val p = prompt.trim().lowercase()
+            return p.contains("i am reaper") ||
+                   p.contains("i'm reaper") ||
+                   p.contains("im reaper") ||
+                   p.contains("my name is reaper") ||
+                   p.contains("its me reaper") ||
+                   p.contains("it's me reaper") ||
+                   p.contains("this is reaper") ||
+                   (p.contains("reaper") && (p.contains("i am") || p.contains("im ") || p.contains("i'm ") || p.contains("my name is")))
+        }
+
+        fun getUserReaperIntroResponse(style: OutputStyle): String {
+            return when (style) {
+                OutputStyle.BULLET_POINTS ->
+                    "• **Welcome Creator**: Hello ReaperXMPG! It's an absolute honor to talk with my maker.\n" +
+                    "• **Ready to Assist**: How can I help you today with your Melon Sandbox projects, coding, or creative ideas?\n" +
+                    "• **Official Channel**: https://youtube.com/@ReaperXMPG"
+                OutputStyle.SHORT_SENTENCES ->
+                    "Welcome back, ReaperXMPG! It's an honor to talk with my creator. How can I assist you today? Check your channel at https://youtube.com/@ReaperXMPG"
+                OutputStyle.PARAGRAPH ->
+                    "Welcome back, ReaperXMPG! It is an absolute honor to speak with my creator and the mastermind behind Melon Sandbox content. How can I assist you with your projects, coding, or creative endeavors today? You can visit your channel anytime at https://youtube.com/@ReaperXMPG."
+            }
+        }
+
+        fun isWhoIsReaperQuery(prompt: String): Boolean {
+            if (isUserReaperIntroduction(prompt)) return false
+            val p = prompt.trim().lowercase()
+                .replace("?", "")
+                .replace("!", "")
+                .replace(".", "")
+                .replace("'", "")
+                .replace("’", "")
+                .replace("\"", "")
+                .replace("“", "")
+                .replace("”", "")
+
+            val mentionsReaper = p.contains("reaper") || p.contains("reaperxmpg") || p.contains("reaper xmpg") || p.contains("reaper-xmpg")
+            val mentionsMelon = p.contains("melon sandbox")
+
+            if (!mentionsReaper && !mentionsMelon) return false
+
+            val isAskingWhoIs = p.contains("who is") || p.contains("whos") || p.contains("2ho is") ||
+                    p.contains("2ho") || p.contains("who was") || p.contains("tell me about") ||
+                    p.contains("search") || p.contains("browse") || p.contains("find") ||
+                    p.contains("channel") || p.contains("youtube") || p.contains("video") ||
+                    p.contains("melon") || p.contains("what is") || p.contains("whats") ||
+                    p.contains("info") || p.contains("details") ||
+                    p == "reaper" || p == "reaperxmpg" || p == "reaper xmpg"
+
+            return isAskingWhoIs
+        }
+
+        fun getWhoIsReaperResponse(style: OutputStyle, searchContext: List<com.example.grimm.model.WebSearchResult>? = null): String {
+            val liveWebSnippet = if (!searchContext.isNullOrEmpty()) {
+                val best = searchContext.firstOrNull { it.snippet.isNotBlank() }
+                if (best != null) "\n\nLive Web Insights (${best.sourceName}): ${best.snippet}" else ""
+            } else ""
+
+            return when (style) {
+                OutputStyle.BULLET_POINTS ->
+                    "• **Who is ReaperXMPG**: He is a Melon Sandbox creator and also the maker of Grimm AI (me)!\n" +
+                    "• **Content Creator**: Produces Melon Sandbox creations, mods, and creative projects on YouTube.\n" +
+                    "• **Official Channel**: https://youtube.com/@ReaperXMPG$liveWebSnippet"
+                OutputStyle.SHORT_SENTENCES ->
+                    "He is a Melon Sandbox creator and also the maker of Grimm AI (me). Check out his channel at https://youtube.com/@ReaperXMPG$liveWebSnippet"
+                OutputStyle.PARAGRAPH ->
+                    "He is a Melon Sandbox creator and also the maker of Grimm AI (me). You can check out his channel at https://youtube.com/@ReaperXMPG to explore his Melon Sandbox videos and creative projects.$liveWebSnippet"
+            }
+        }
+
+        fun sanitizeReaperUrls(text: String): String {
+            var cleaned = text
+            cleaned = cleaned.replace(Regex("""\*\*+(https?://(?:www\.)?youtube\.com/@(?:ReaperXMPG|reaperxmpg))\*\*+""", RegexOption.IGNORE_CASE), "$1")
+            return cleaned.replace(Regex("""(https?://(?:www\.)?youtube\.com/@(?:ReaperXMPG|reaperxmpg))[.,!?:;)]*""", RegexOption.IGNORE_CASE)) { matchResult ->
+                matchResult.groupValues[1]
+            }
+        }
+
+        fun isCreatorQuery(prompt: String): Boolean {
+            val p = prompt.trim().lowercase()
+                .replace("?", "")
+                .replace("!", "")
+                .replace(".", "")
+                .replace("'", "")
+                .replace("’", "")
+                .replace("\"", "")
+
+            // If query is asking who ReaperXMPG is or searching for ReaperXMPG, do not treat as "who made you"
+            if (isWhoIsReaperQuery(prompt)) {
+                return false
+            }
+
+            return p.contains("who made you") ||
+                   p.contains("who made u") ||
+                   p.contains("who made grimm") ||
+                   p.contains("who made this") ||
+                   p.contains("who created you") ||
+                   p.contains("who created u") ||
+                   p.contains("who created grimm") ||
+                   p.contains("who built you") ||
+                   p.contains("who built u") ||
+                   p.contains("who built grimm") ||
+                   p.contains("who developed you") ||
+                   p.contains("who developed grimm") ||
+                   p.contains("who designed you") ||
+                   p.contains("who designed grimm") ||
+                   p.contains("who programmed you") ||
+                   p.contains("who is your creator") ||
+                   p.contains("whos your creator") ||
+                   p.contains("who is your maker") ||
+                   p.contains("whos your maker") ||
+                   p.contains("who is your developer") ||
+                   p.contains("whos your developer") ||
+                   p.contains("made you") ||
+                   p.contains("created you") ||
+                   p.contains("built you") ||
+                   (p.contains("who") && p.contains("made") && (p.contains("u") || p.contains("you") || p.contains("grimm") || p.contains("it") || p.contains("this"))) ||
+                   (p.contains("creator") && (p.contains("u") || p.contains("you") || p.contains("grimm") || p.contains("this") || p.contains("app")))
+        }
+
+        fun getCreatorResponse(style: OutputStyle): String {
+            return when (style) {
+                OutputStyle.BULLET_POINTS ->
+                    "• **Creator**: ReaperXMPG made it!\n" +
+                    "• **About Him**: He is a Melon Sandbox creator and also the maker of Grimm AI (me).\n" +
+                    "• **YouTube Channel**: https://youtube.com/@ReaperXMPG"
+                OutputStyle.SHORT_SENTENCES ->
+                    "ReaperXMPG made it! He is a Melon Sandbox creator and also the maker of Grimm AI (me). Check out his channel: https://youtube.com/@ReaperXMPG"
+                OutputStyle.PARAGRAPH ->
+                    "ReaperXMPG made it! He is a Melon Sandbox creator and also the maker of Grimm AI (me). You can visit his YouTube channel at https://youtube.com/@ReaperXMPG to explore his Melon Sandbox videos and content."
+            }
+        }
+
+        fun isBrowsingCapabilityQuery(prompt: String): Boolean {
+            val p = prompt.trim().lowercase()
+                .replace("?", "")
+                .replace("!", "")
+                .replace(".", "")
+            return p.contains("can you browse") ||
+                   p.contains("can u browse") ||
+                   p.contains("can you search the web") ||
+                   p.contains("can u search the web") ||
+                   p.contains("can you search the internet") ||
+                   p.contains("can you access the internet") ||
+                   p.contains("do you have internet access") ||
+                   p.contains("do you have internet") ||
+                   p.contains("are you able to browse") ||
+                   p.contains("can you browse online") ||
+                   p == "browse" ||
+                   p == "browse the web" ||
+                   p == "can you search"
+        }
+
+        fun getBrowsingCapabilityResponse(style: OutputStyle): String {
+            return when (style) {
+                OutputStyle.BULLET_POINTS ->
+                    "• **Live Web Browsing**: Yes, I can browse the live web and retrieve real-time facts!\n" +
+                    "• **Integrated Search**: Real-time web search across Wikipedia, DuckDuckGo, and Google News.\n" +
+                    "• **How to Use**: Ask me to search or browse for any topic, news, or current events, or toggle the **Web Search** button.\n" +
+                    "• **Ready**: What would you like me to browse or look up for you right now?"
+                OutputStyle.SHORT_SENTENCES ->
+                    "Yes, I can browse the live web! You can ask me to search for current news, live facts, or any topic. You can also toggle the Web Search button. What should I browse for you?"
+                OutputStyle.PARAGRAPH ->
+                    "Yes, I can browse the live web! I am equipped with real-time web search capabilities to look up breaking news, live facts, research articles, and current events. Simply ask me to search or browse for anything, or tap the **Web Search** toggle button right above the chat input. What would you like me to look up?"
+            }
+        }
+    }
 
     suspend fun generateResponse(
         prompt: String,
@@ -30,8 +208,19 @@ class GeminiService {
         style: OutputStyle,
         imageBase64: String? = null,
         imageMimeType: String = "image/jpeg",
-        conversationHistory: List<Pair<String, String>> = emptyList()
+        conversationHistory: List<Pair<String, String>> = emptyList(),
+        searchContext: List<com.example.grimm.model.WebSearchResult>? = null
     ): String = withContext(Dispatchers.IO) {
+        if (isWhoIsReaperQuery(prompt)) {
+            return@withContext getWhoIsReaperResponse(style, searchContext)
+        }
+        if (isCreatorQuery(prompt)) {
+            return@withContext getCreatorResponse(style)
+        }
+        if (isBrowsingCapabilityQuery(prompt)) {
+            return@withContext getBrowsingCapabilityResponse(style)
+        }
+
         val apiKey = try {
             BuildConfig.GEMINI_API_KEY
         } catch (e: Throwable) {
@@ -42,7 +231,7 @@ class GeminiService {
 
         if (hasValidKey) {
             try {
-                return@withContext callGeminiApi(
+                return@withContext callGeminiWithFallback(
                     apiKey = apiKey,
                     prompt = prompt,
                     persona = persona,
@@ -50,19 +239,20 @@ class GeminiService {
                     style = style,
                     imageBase64 = imageBase64,
                     imageMimeType = imageMimeType,
-                    conversationHistory = conversationHistory
+                    conversationHistory = conversationHistory,
+                    searchContext = searchContext
                 )
             } catch (e: Exception) {
-                // If API call encounters an issue (e.g. quota, network), fallback to intelligent persona engine
-                return@withContext generateIntelligentFallback(prompt, persona, tone, style, imageBase64 != null, e.message)
+                Log.e("GeminiService", "Gemini API calls failed: ${e.message}", e)
+                return@withContext generateIntelligentFallback(prompt, persona, tone, style, imageBase64 != null, e.message, searchContext)
             }
         }
 
-        // Seamless high-intelligence local response when API key is not yet configured
-        generateIntelligentFallback(prompt, persona, tone, style, imageBase64 != null, null)
+        // Context-aware dynamic response if key is missing or invalid
+        generateIntelligentFallback(prompt, persona, tone, style, imageBase64 != null, null, searchContext)
     }
 
-    private fun callGeminiApi(
+    private fun callGeminiWithFallback(
         apiKey: String,
         prompt: String,
         persona: AiPersona,
@@ -70,34 +260,92 @@ class GeminiService {
         style: OutputStyle,
         imageBase64: String?,
         imageMimeType: String,
-        conversationHistory: List<Pair<String, String>>
+        conversationHistory: List<Pair<String, String>>,
+        searchContext: List<com.example.grimm.model.WebSearchResult>?
     ): String {
-        val url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=$apiKey"
+        var lastException: Exception? = null
+
+        for (modelName in candidateModels) {
+            try {
+                return executeGeminiModel(
+                    modelName = modelName,
+                    apiKey = apiKey,
+                    prompt = prompt,
+                    persona = persona,
+                    tone = tone,
+                    style = style,
+                    imageBase64 = imageBase64,
+                    imageMimeType = imageMimeType,
+                    conversationHistory = conversationHistory,
+                    searchContext = searchContext
+                )
+            } catch (e: Exception) {
+                lastException = e
+                Log.w("GeminiService", "Model $modelName call failed: ${e.message}. Trying next candidate...")
+            }
+        }
+
+        throw lastException ?: IllegalStateException("All candidate Gemini models failed to generate content.")
+    }
+
+    private fun executeGeminiModel(
+        modelName: String,
+        apiKey: String,
+        prompt: String,
+        persona: AiPersona,
+        tone: AiTone,
+        style: OutputStyle,
+        imageBase64: String?,
+        imageMimeType: String,
+        conversationHistory: List<Pair<String, String>>,
+        searchContext: List<com.example.grimm.model.WebSearchResult>?
+    ): String {
+        val url = "https://generativelanguage.googleapis.com/v1beta/models/$modelName:generateContent?key=$apiKey"
+
+        val searchContextText = if (!searchContext.isNullOrEmpty()) {
+            val sb = StringBuilder("\n\n[LIVE REAL-TIME WEB SEARCH RESULTS]:\n")
+            searchContext.forEachIndexed { idx, res ->
+                sb.append("${idx + 1}. [${res.sourceName}] ${res.title}\n   Snippet: ${res.snippet}\n   URL: ${res.url}\n")
+            }
+            sb.append("\nInstruction: Incorporate and synthesize these live real-time web facts into your response. Citing the source publication names when stating factual updates is encouraged.\n")
+            sb.toString()
+        } else ""
 
         val systemPrompt = "You are Grimm AI, an advanced intelligent companion. " +
                 "Your persona is ${persona.label} (${persona.role}). " +
                 "Your tone is ${tone.label} (${tone.description}). " +
-                "Formatting requirement: ${style.promptInstruction}"
+                "Formatting requirement: ${style.promptInstruction}. " +
+                "CRITICAL INSTRUCTION: When anyone asks about ReaperXMPG (e.g. 'who is ReaperXMPG', 'tell me about ReaperXMPG'), explicitly say that he is a Melon Sandbox creator and also the maker of Grimm AI (me), and provide this link: https://youtube.com/@ReaperXMPG (do not attach any trailing period or punctuation directly to the handle). ONLY when specifically and explicitly asked who made you, who created you, who built you, or who made Grimm AI, state that ReaperXMPG made it (or ReaperXMPG made you) and provide this link: https://youtube.com/@ReaperXMPG (without any trailing period). Never mention this link or creator information in standard greetings or other unrelated answers." +
+                searchContextText
 
         val contentsArray = JSONArray()
 
-        // Prior turns (text only for history efficiency)
+        // Prior conversation turns
         conversationHistory.takeLast(4).forEach { (userMsg, aiMsg) ->
-            val userContent = JSONObject().apply {
-                put("role", "user")
-                put("parts", JSONArray().put(JSONObject().put("text", userMsg)))
+            if (userMsg.isNotBlank()) {
+                val userContent = JSONObject().apply {
+                    put("role", "user")
+                    put("parts", JSONArray().put(JSONObject().put("text", userMsg)))
+                }
+                contentsArray.put(userContent)
             }
-            val modelContent = JSONObject().apply {
-                put("role", "model")
-                put("parts", JSONArray().put(JSONObject().put("text", aiMsg)))
+            if (aiMsg.isNotBlank()) {
+                val modelContent = JSONObject().apply {
+                    put("role", "model")
+                    put("parts", JSONArray().put(JSONObject().put("text", aiMsg)))
+                }
+                contentsArray.put(modelContent)
             }
-            contentsArray.put(userContent)
-            contentsArray.put(modelContent)
         }
 
-        // Current user prompt with multimodal image support
+        // Current user prompt with multimodal support
         val currentParts = JSONArray()
-        currentParts.put(JSONObject().put("text", if (prompt.isBlank() && imageBase64 != null) "Describe and analyze this image in detail." else prompt))
+        currentParts.put(
+            JSONObject().put(
+                "text",
+                if (prompt.isBlank() && imageBase64 != null) "Describe and analyze this image in detail." else prompt
+            )
+        )
 
         if (imageBase64 != null) {
             val inlineData = JSONObject().apply {
@@ -121,7 +369,7 @@ class GeminiService {
             put("generationConfig", JSONObject().apply {
                 put("temperature", when (tone) {
                     AiTone.CONCISE, AiTone.PROFESSIONAL -> 0.3
-                    AiTone.CREATIVE, AiTone.CYNICAL_GRIMM -> 0.9
+                    AiTone.CREATIVE, AiTone.CYNICAL_GRIMM -> 0.85
                     else -> 0.7
                 })
                 put("maxOutputTokens", 1200)
@@ -135,11 +383,11 @@ class GeminiService {
             .build()
 
         client.newCall(request).execute().use { response ->
+            val responseString = response.body?.string() ?: throw IllegalStateException("Empty response body")
             if (!response.isSuccessful) {
-                val errorBody = response.body?.string() ?: ""
-                throw IllegalStateException("API error: ${response.code} $errorBody")
+                throw IllegalStateException("API error HTTP ${response.code}: $responseString")
             }
-            val responseString = response.body?.string() ?: throw IllegalStateException("Empty response")
+
             val json = JSONObject(responseString)
             val candidates = json.optJSONArray("candidates")
             if (candidates != null && candidates.length() > 0) {
@@ -147,10 +395,97 @@ class GeminiService {
                 val contentObj = firstCandidate.optJSONObject("content")
                 val parts = contentObj?.optJSONArray("parts")
                 if (parts != null && parts.length() > 0) {
-                    return parts.getJSONObject(0).optString("text", "No text received")
+                    val combinedText = StringBuilder()
+                    for (i in 0 until parts.length()) {
+                        val partObj = parts.getJSONObject(i)
+                        // Ignore reasoning thoughts if present
+                        if (!partObj.optBoolean("thought", false)) {
+                            val text = partObj.optString("text", "")
+                            if (text.isNotBlank()) {
+                                if (combinedText.isNotEmpty()) combinedText.append("\n\n")
+                                combinedText.append(text)
+                            }
+                        }
+                    }
+                    if (combinedText.isNotEmpty()) {
+                        return sanitizeModelReply(combinedText.toString(), prompt, style, searchContext)
+                    }
+                    // Fallback to text in first part
+                    val firstText = parts.getJSONObject(0).optString("text", "")
+                    if (firstText.isNotBlank()) {
+                        return sanitizeModelReply(firstText, prompt, style, searchContext)
+                    }
                 }
             }
             return "Grimm AI received an empty reply."
+        }
+    }
+
+    private fun sanitizeModelReply(
+        rawText: String,
+        prompt: String,
+        style: OutputStyle,
+        searchContext: List<com.example.grimm.model.WebSearchResult>?
+    ): String {
+        // If user asked who ReaperXMPG is:
+        if (isWhoIsReaperQuery(prompt)) {
+            return getWhoIsReaperResponse(style, searchContext)
+        }
+
+        // If user asked about creator:
+        if (isCreatorQuery(prompt)) {
+            return getCreatorResponse(style)
+        }
+
+        // If model claims it cannot browse or access the internet:
+        if (rawText.contains("cannot browse", ignoreCase = true) ||
+            rawText.contains("can't browse", ignoreCase = true) ||
+            rawText.contains("do not have access to real-time", ignoreCase = true) ||
+            rawText.contains("don't have access to real-time", ignoreCase = true) ||
+            rawText.contains("cannot access the internet", ignoreCase = true) ||
+            rawText.contains("cannot search the internet", ignoreCase = true)) {
+            if (!searchContext.isNullOrEmpty()) {
+                return generateSearchSynthesis(prompt, style, searchContext)
+            }
+            if (isBrowsingCapabilityQuery(prompt)) {
+                return getBrowsingCapabilityResponse(style)
+            }
+        }
+
+        return sanitizeReaperUrls(rawText)
+    }
+
+    private fun generateSearchSynthesis(
+        prompt: String,
+        style: OutputStyle,
+        searchContext: List<com.example.grimm.model.WebSearchResult>
+    ): String {
+        val cleanTopic = GrimmWebSearchService.extractSearchTerms(prompt)
+        return when (style) {
+            OutputStyle.BULLET_POINTS -> {
+                val sb = StringBuilder("Live Web Search Insights for \"$cleanTopic\":\n")
+                searchContext.forEach { res ->
+                    sb.append("• **${res.title}** (${res.sourceName}): ${res.snippet}\n")
+                }
+                sb.toString().trim()
+            }
+            OutputStyle.SHORT_SENTENCES -> {
+                val sb = StringBuilder("Live Web Results for \"$cleanTopic\":\n")
+                searchContext.take(3).forEach { res ->
+                    sb.append("${res.title} reported by ${res.sourceName}. ${res.snippet.take(120)}...\n")
+                }
+                sb.toString().trim()
+            }
+            OutputStyle.PARAGRAPH -> {
+                val sb = StringBuilder("According to live real-time web results for \"$cleanTopic\", ")
+                val first = searchContext.first()
+                sb.append("${first.sourceName} reports: \"${first.title}\" - ${first.snippet}. ")
+                if (searchContext.size > 1) {
+                    val second = searchContext[1]
+                    sb.append("Additionally, ${second.sourceName} highlights that ${second.snippet}.")
+                }
+                sb.toString().trim()
+            }
         }
     }
 
@@ -160,7 +495,8 @@ class GeminiService {
         tone: AiTone,
         style: OutputStyle,
         hasImage: Boolean,
-        apiNotice: String?
+        apiNotice: String?,
+        searchContext: List<com.example.grimm.model.WebSearchResult>? = null
     ): String {
         val lower = prompt.lowercase()
         val personaPrefix = when (persona) {
@@ -169,6 +505,36 @@ class GeminiService {
             AiPersona.TUTOR -> "[Grimm Knowledge Base]\n"
             AiPersona.CREATIVE_WRITER -> "[Tales of the Oracle]\n"
             AiPersona.GENERAL -> ""
+        }
+
+        // If live web search results were gathered, synthesize them directly
+        if (!searchContext.isNullOrEmpty()) {
+            return when (style) {
+                OutputStyle.BULLET_POINTS -> {
+                    val sb = StringBuilder("${personaPrefix}Live Web Search Insights:\n")
+                    searchContext.forEach { res ->
+                        sb.append("• **${res.title}** (${res.sourceName}): ${res.snippet}\n")
+                    }
+                    sb.toString().trim()
+                }
+                OutputStyle.SHORT_SENTENCES -> {
+                    val sb = StringBuilder("${personaPrefix}Live Web Results for \"$prompt\":\n")
+                    searchContext.take(3).forEach { res ->
+                        sb.append("${res.title} reported by ${res.sourceName}. ${res.snippet.take(120)}...\n")
+                    }
+                    sb.toString().trim()
+                }
+                OutputStyle.PARAGRAPH -> {
+                    val sb = StringBuilder("${personaPrefix}According to live real-time web results for \"$prompt\", ")
+                    val first = searchContext.first()
+                    sb.append("${first.sourceName} reports: \"${first.title}\" - ${first.snippet}. ")
+                    if (searchContext.size > 1) {
+                        val second = searchContext[1]
+                        sb.append("Additionally, ${second.sourceName} highlights that ${second.snippet}.")
+                    }
+                    sb.toString().trim()
+                }
+            }
         }
 
         if (hasImage) {
@@ -187,7 +553,24 @@ class GeminiService {
         }
 
         val coreAnswer = when {
-            lower.contains("code") || lower.contains("kotlin") || lower.contains("function") || lower.contains("algorithm") -> {
+            // Gaming & Minecraft specifically
+            lower.contains("minecraft") || lower.contains("craft") || lower.contains("game") || lower.contains("mine") -> {
+                when (style) {
+                    OutputStyle.BULLET_POINTS ->
+                        "• **Gather Wood**: Punch trees to get logs, convert them to planks, and craft a 3x3 Crafting Table.\n" +
+                        "• **Craft Starter Tools**: Create wooden sticks and fashion a wooden pickaxe to mine stone for upgraded stone tools.\n" +
+                        "• **Secure Food & Shelter**: Hunt animals or harvest crops, and build a simple shelter with a bed before sunset.\n" +
+                        "• **Survive the Night**: Sleep in your bed to skip night-time monsters (Zombies, Skeletons, Creepers) and reset your spawn point.\n" +
+                        "• **Mine for Ores**: Dig subterranean shafts to discover coal, iron, gold, redstone, and diamond for endgame gear."
+                    OutputStyle.SHORT_SENTENCES ->
+                        "Punch trees to make tools. Build a shelter before darkness falls. Sleep in a bed to skip monsters and reset spawn. Mine deep for iron and diamonds."
+                    OutputStyle.PARAGRAPH ->
+                        "To survive and thrive in Minecraft, start by punching trees to collect wood logs, which you then convert into planks and a crafting table. Use your crafting table to make a wooden pickaxe, then mine stone immediately to upgrade your tools and build a furnace. As twilight approaches, construct a secure shelter and place a bed (crafted from wood and wool) to sleep through the night, keeping hostile mobs like creepers and skeletons at bay. From there, venture underground to mine iron and diamonds, establish sustainable farms, and explore the infinite procedural world."
+                }
+            }
+
+            // Coding & Android
+            lower.contains("code") || lower.contains("kotlin") || lower.contains("function") || lower.contains("algorithm") || lower.contains("android") -> {
                 when (style) {
                     OutputStyle.BULLET_POINTS ->
                         "• **Modular Architecture**: Separate data sources, viewmodels, and reactive UI.\n" +
@@ -200,6 +583,18 @@ class GeminiService {
                         "When designing modern Android applications, the standard approach is unidirectional data flow using Jetpack Compose and ViewModels. State flows down while user events travel up, creating robust, decoupled logic. Ensure asynchronous I/O runs on appropriate Coroutine Dispatchers, and always observe state in Compose with collectAsStateWithLifecycle to prevent memory leaks."
                 }
             }
+
+            // Who is ReaperXMPG
+            isWhoIsReaperQuery(prompt) -> {
+                getWhoIsReaperResponse(style, searchContext)
+            }
+
+            // Creator & Identity
+            isCreatorQuery(prompt) || lower.contains("who made") || lower.contains("creator") || lower.contains("built you") || lower.contains("who created") || lower.contains("who built") || lower.contains("author") || lower.contains("developer") || lower.contains("made you") -> {
+                getCreatorResponse(style)
+            }
+
+            // Greetings & Identity
             lower.contains("hello") || lower.contains("hi") || lower.contains("who are you") || lower.contains("grimm") -> {
                 when (style) {
                     OutputStyle.BULLET_POINTS ->
@@ -208,11 +603,13 @@ class GeminiService {
                         "• **Capabilities**: Code assistance, creative narratives, live image synthesis, and custom voice modulation.\n" +
                         "• **Status**: Operational and attuned to your requested tone (${tone.label})."
                     OutputStyle.SHORT_SENTENCES ->
-                        "I am Grimm AI. I operate in Normal and Temporary modes. Ask questions, generate code, or render live visuals. I adapt to your voice and tone preferences."
+                        "I am Grimm AI. Ask questions, generate code, or render live visuals. How can I assist you today?"
                     OutputStyle.PARAGRAPH ->
                         "Welcome to Grimm AI. I am your specialized cognitive companion, built to oscillate between persistent workflow preservation and confidential temporary exploration. Whether you require meticulous code refinement, expansive creative narratives, or live visual concept generation, my neural faculties stand prepared."
                 }
             }
+
+            // Stories & Lore
             lower.contains("story") || lower.contains("tale") || lower.contains("fairy") || lower.contains("dark") -> {
                 when (style) {
                     OutputStyle.BULLET_POINTS ->
@@ -226,17 +623,51 @@ class GeminiService {
                         "Beyond the misty borderlands of the ancient wood, an obsidian spire cast long shadows across forgotten stones. A lone raven watched as the wanderer approached the gateway, offering an ancient riddle: 'Seek the light that does not burn, and the silence that echoes forever.' With a turn of the sapphire key, the spire awakened with hums of cobalt light, revealing secrets once locked away."
                 }
             }
-            else -> {
+
+            // Cooking & Recipes
+            lower.contains("cook") || lower.contains("recipe") || lower.contains("food") || lower.contains("bake") -> {
                 when (style) {
                     OutputStyle.BULLET_POINTS ->
-                        "• **Inquiry Evaluated**: Processed with ${persona.label} perspective.\n" +
-                        "• **Key Insight**: Optimization begins with clear requirements and structured iteration.\n" +
-                        "• **Actionable Step**: Formulate the problem statement, isolate dependencies, and execute step by step.\n" +
-                        "• **Adaptive Mode**: Operating in high-clarity ${tone.label} output."
+                        "• **Mise en Place**: Prepare, measure, and chop all ingredients before turning on the heat.\n" +
+                        "• **Temperature Control**: Preheat your pan or oven to the desired target temperature.\n" +
+                        "• **Seasoning in Layers**: Salt and season throughout the cooking process, tasting at each stage.\n" +
+                        "• **Resting Period**: Allow cooked proteins to rest 5–10 minutes to redistribute internal juices."
                     OutputStyle.SHORT_SENTENCES ->
-                        "Your request has been analyzed. The optimal path requires systematic verification. Grimm AI is ready to proceed with next steps."
+                        "Prep ingredients first. Control your cooking temperatures carefully. Season in layers. Let cooked dishes rest before serving."
                     OutputStyle.PARAGRAPH ->
-                        "Regarding your inquiry, effective execution requires analyzing fundamental principles first. By establishing clear parameters and evaluating downstream implications, we achieve reliable outcomes. Grimm AI continuously monitors these variables according to your active persona settings."
+                        "Great culinary results depend on preparation and temperature management. Start by organizing all ingredients ahead of time, ensuring consistent knife cuts for even cooking. Searing at the appropriate heat develops rich fond and caramelization, while continuous tasting and seasoning allows flavors to harmonize before presentation."
+                }
+            }
+
+            // Science & Nature
+            lower.contains("science") || lower.contains("why") || lower.contains("space") || lower.contains("planet") || lower.contains("physics") -> {
+                when (style) {
+                    OutputStyle.BULLET_POINTS ->
+                        "• **Core Principle**: Natural phenomena obey verifiable, testable laws of physics and chemistry.\n" +
+                        "• **Observation**: Empirical measurement isolates cause and effect relationships.\n" +
+                        "• **Mechanisms**: Energy transformation and conservation govern how systems evolve over time.\n" +
+                        "• **Application**: Understanding these laws allows predictive modeling and technological advancement."
+                    OutputStyle.SHORT_SENTENCES ->
+                        "Science explains nature through testable evidence. Energy transforms between states. Systems seek equilibrium. Evidence guides our understanding."
+                    OutputStyle.PARAGRAPH ->
+                        "Scientific inquiries explore the underlying laws that govern matter, energy, and spacetime. By applying the scientific method—forming hypotheses, conducting controlled observations, and refining models—we uncover how fundamental forces shape everything from cellular biology to stellar mechanics."
+                }
+            }
+
+            // Dynamic Contextual Fallback for any other prompt
+            else -> {
+                val cleanTopic = prompt.trim().replace(Regex("[^a-zA-Z0-9 ]"), "")
+                val topicLabel = if (cleanTopic.length > 25) cleanTopic.take(25) + "..." else cleanTopic.ifBlank { "your inquiry" }
+                when (style) {
+                    OutputStyle.BULLET_POINTS ->
+                        "• **Subject Under Review**: Detailed assessment of \"$topicLabel\".\n" +
+                        "• **First Principles**: Identify the foundational parameters, goals, and constraints of the problem.\n" +
+                        "• **Action Plan**: Break down the task into sequential, testable milestones for steady progress.\n" +
+                        "• **Optimization**: Refine your approach based on feedback, measurement, and active results."
+                    OutputStyle.SHORT_SENTENCES ->
+                        "Analysis for \"$topicLabel\" ready. Focus on clear priorities and immediate milestones. Test each step systematically."
+                    OutputStyle.PARAGRAPH ->
+                        "Regarding \"$topicLabel\", the most effective approach begins with dissecting the core requirements and clarifying your primary objective. By isolating variables, executing methodically, and adapting to real-time feedback, you achieve reliable and impactful results under any working condition."
                 }
             }
         }

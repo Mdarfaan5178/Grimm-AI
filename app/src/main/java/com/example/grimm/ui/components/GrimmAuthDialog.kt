@@ -22,9 +22,9 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.automirrored.filled.Login
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Login
-import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
@@ -75,14 +75,15 @@ fun GrimmAuthDialog(
     isSigningInWithGoogle: Boolean = false,
     googleAuthError: String? = null,
     onSignIn: (name: String, email: String) -> Unit,
-    onGoogleSignIn: () -> Unit,
-    onGoogleSignInDirect: (name: String, email: String) -> Unit,
+    onGoogleSignIn: (preferredEmail: String?) -> Unit,
     onSignOut: () -> Unit,
     onDismiss: () -> Unit
 ) {
-    var nameInput by remember { mutableStateOf(if (isSignedIn) currentName else "Grimm Scholar") }
-    var emailInput by remember { mutableStateOf(if (isSignedIn) currentEmail else "mdarfaan5178@gmail.com") }
+    var nameInput by remember { mutableStateOf(if (isSignedIn) currentName else "") }
+    var emailInput by remember { mutableStateOf(if (isSignedIn) currentEmail else "") }
+    var googleEmailInput by remember { mutableStateOf("mdarfaan5178@gmail.com") }
     var showCustomCreds by remember { mutableStateOf(false) }
+    var showEditGoogleEmail by remember { mutableStateOf(false) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -235,11 +236,11 @@ fun GrimmAuthDialog(
 
                     // Google Sign-In Primary Button
                     Surface(
-                        onClick = onGoogleSignIn,
+                        onClick = { onGoogleSignIn(googleEmailInput) },
                         shape = RoundedCornerShape(24.dp),
                         color = Color.White,
                         border = BorderStroke(1.dp, Color(0xFFDADCE0)),
-                        shadowElevation = 1.dp,
+                        shadowElevation = 2.dp,
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(48.dp)
@@ -260,7 +261,7 @@ fun GrimmAuthDialog(
                                 )
                                 Spacer(modifier = Modifier.width(10.dp))
                                 Text(
-                                    text = "Connecting to Google...",
+                                    text = "Signing in with Google...",
                                     fontSize = 14.sp,
                                     fontWeight = FontWeight.Medium,
                                     color = Color(0xFF3C4043)
@@ -283,54 +284,75 @@ fun GrimmAuthDialog(
                         }
                     }
 
-                    // Direct One-Tap Google Account quick option
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    // Selected Google Profile Card
                     Surface(
-                        onClick = {
-                            onGoogleSignInDirect("Arfaan", "mdarfaan5178@gmail.com")
-                        },
                         shape = RoundedCornerShape(10.dp),
-                        color = Color(0xFFF1F3F4),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .testTag("one_tap_google_button")
+                        color = Color(0xFFF1F5F9),
+                        border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(24.dp)
-                                        .clip(CircleShape)
-                                        .background(Color(0xFF4285F4)),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text("A", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        Column(modifier = Modifier.padding(10.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(28.dp)
+                                            .clip(CircleShape)
+                                            .background(Color.White),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(
+                                            painter = painterResource(id = R.drawable.ic_google_logo),
+                                            contentDescription = null,
+                                            tint = Color.Unspecified,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Column {
+                                        Text(
+                                            text = if (googleEmailInput.equals("mdarfaan5178@gmail.com", ignoreCase = true)) "MD Arfaan" else googleEmailInput.substringBefore("@"),
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = GrimmDarkBlue
+                                        )
+                                        Text(
+                                            text = googleEmailInput,
+                                            fontSize = 11.sp,
+                                            color = GrimmTextSecondary
+                                        )
+                                    }
                                 }
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Column {
+                                TextButton(
+                                    onClick = { showEditGoogleEmail = !showEditGoogleEmail },
+                                    modifier = Modifier.padding(0.dp)
+                                ) {
                                     Text(
-                                        text = "One-tap: mdarfaan5178@gmail.com",
-                                        fontSize = 12.sp,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = GrimmDarkBlue
-                                    )
-                                    Text(
-                                        text = "Quick sign in with Google account",
-                                        fontSize = 10.sp,
-                                        color = GrimmTextSecondary
+                                        text = if (showEditGoogleEmail) "Done" else "Switch",
+                                        fontSize = 11.sp,
+                                        color = GrimmLightBlue
                                     )
                                 }
                             }
-                            Icon(
-                                imageVector = Icons.Default.Login,
-                                contentDescription = null,
-                                tint = GrimmLightBlue,
-                                modifier = Modifier.size(16.dp)
-                            )
+
+                            if (showEditGoogleEmail) {
+                                Spacer(modifier = Modifier.height(6.dp))
+                                OutlinedTextField(
+                                    value = googleEmailInput,
+                                    onValueChange = { googleEmailInput = it },
+                                    label = { Text("Google Account Email", fontSize = 11.sp) },
+                                    singleLine = true,
+                                    shape = RoundedCornerShape(8.dp),
+                                    textStyle = androidx.compose.ui.text.TextStyle(fontSize = 12.sp),
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
                         }
                     }
 
@@ -454,7 +476,7 @@ fun GrimmAuthDialog(
                     modifier = Modifier.testTag("sign_out_button")
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Logout,
+                        imageVector = Icons.AutoMirrored.Filled.Logout,
                         contentDescription = null,
                         modifier = Modifier.size(16.dp)
                     )
@@ -477,7 +499,7 @@ fun GrimmAuthDialog(
                         modifier = Modifier.testTag("sign_in_submit_button")
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Login,
+                            imageVector = Icons.AutoMirrored.Filled.Login,
                             contentDescription = null,
                             modifier = Modifier.size(16.dp)
                         )

@@ -103,11 +103,13 @@ fun GrimmTopBar(
                                 .background(GrimmLightBlue),
                             contentAlignment = Alignment.Center
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.AutoAwesome,
-                                contentDescription = null,
-                                tint = Color.White,
-                                modifier = Modifier.size(20.dp)
+                            androidx.compose.foundation.Image(
+                                painter = painterResource(id = R.drawable.grimm),
+                                contentDescription = "Grimm Logo",
+                                contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                                modifier = Modifier
+                                    .size(32.dp)
+                                    .clip(RoundedCornerShape(8.dp))
                             )
                         }
                         Column {

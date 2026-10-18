@@ -34,6 +34,14 @@ enum class AiPersona(val label: String, val role: String) {
     GRIMM_NARRATOR("Grimm Lorekeeper", "Chronicler of deep secrets and folklore")
 }
 
+data class WebSearchResult(
+    val title: String,
+    val snippet: String,
+    val url: String,
+    val sourceName: String,
+    val timestamp: String? = null
+)
+
 data class ChatMessage(
     val id: String,
     val sender: MessageSender,
@@ -45,7 +53,9 @@ data class ChatMessage(
     val attachedImageUri: String? = null,
     val outputStyle: OutputStyle = OutputStyle.PARAGRAPH,
     val isTemporary: Boolean = false,
-    val isLoading: Boolean = false
+    val isLoading: Boolean = false,
+    val isWebSearch: Boolean = false,
+    val webResults: List<WebSearchResult> = emptyList()
 )
 
 data class ChatSession(

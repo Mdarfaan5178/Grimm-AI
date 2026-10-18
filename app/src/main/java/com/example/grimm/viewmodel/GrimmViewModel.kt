@@ -17,6 +17,8 @@ import com.example.grimm.service.GrimmVoiceProfile
 import android.content.Context
 import com.example.grimm.service.GoogleAuthHelper
 import com.example.grimm.service.GoogleAuthResult
+import com.example.grimm.model.WebSearchResult
+import com.example.grimm.service.GrimmWebSearchService
 import com.example.grimm.service.ImageAspectRatio
 import com.example.grimm.service.ImageGenService
 import com.example.grimm.service.ImageStyle
@@ -55,12 +57,15 @@ data class GrimmUiState(
     val attachedImageUri: String? = null,
     val attachedImageBase64: String? = null,
     val isSigningInWithGoogle: Boolean = false,
-    val googleAuthError: String? = null
+    val googleAuthError: String? = null,
+    val isWebSearchActive: Boolean = false,
+    val searchStatusMessage: String? = null
 )
 
 class GrimmViewModel(application: Application) : AndroidViewModel(application) {
     private val repository = ChatRepository(application)
     private val geminiService = GeminiService()
+    private val webSearchService = GrimmWebSearchService()
     val voiceManager = GrimmVoiceManager(application)
 
     private val _uiState = MutableStateFlow(GrimmUiState())
@@ -150,6 +155,41 @@ class GrimmViewModel(application: Application) : AndroidViewModel(application) {
         _uiState.value = _uiState.value.copy(isImageMode = !_uiState.value.isImageMode)
     }
 
+    fun toggleWebSearch() {
+        _uiState.value = _uiState.value.copy(isWebSearchActive = !_uiState.value.isWebSearchActive)
+    }
+
+    fun setWebSearch(active: Boolean) {
+        _uiState.value = _uiState.value.copy(isWebSearchActive = active)
+    }
+
+    private fun isExplicitWebSearchIntent(query: String): Boolean {
+        val q = query.trim().lowercase()
+        return q.contains("browse") ||
+               q.contains("search") ||
+               q.contains("reaper") ||
+               q.contains("google") ||
+               q.contains("web") ||
+               q.contains("internet") ||
+               q.contains("online") ||
+               q.contains("look up") ||
+               q.contains("find out") ||
+               q.contains("news") ||
+               q.contains("latest") ||
+               q.contains("today") ||
+               q.contains("yesterday") ||
+               q.contains("weather") ||
+               q.contains("price") ||
+               q.contains("score") ||
+               q.contains("current") ||
+               q.contains("who won") ||
+               q.contains("who is") ||
+               q.contains("2ho is") ||
+               q.contains("release date") ||
+               q.contains("http://") ||
+               q.contains("https://")
+    }
+
     fun setImageMode(enabled: Boolean) {
         _uiState.value = _uiState.value.copy(isImageMode = enabled)
     }
@@ -227,7 +267,7 @@ class GrimmViewModel(application: Application) : AndroidViewModel(application) {
         val welcomeMsg = ChatMessage(
             id = UUID.randomUUID().toString(),
             sender = MessageSender.ASSISTANT,
-            text = "Greetings. I am Grimm AI. How may I assist you today? You can switch personas, adjust output style, or generate live visuals.",
+            text = "Greetings. I am Grimm AI, your intelligent companion. How may I assist you today? You can switch personas, adjust output style, or generate live visuals.",
             timestamp = System.currentTimeMillis()
         )
         _uiState.value = _uiState.value.copy(
@@ -279,10 +319,12 @@ class GrimmViewModel(application: Application) : AndroidViewModel(application) {
         persistCurrentSession()
     }
 
-    fun signInWithGoogle(context: Context) {
+    fun signInWithGoogle(context: Context, preferredEmail: String? = null, preferredName: String? = null) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isSigningInWithGoogle = true, googleAuthError = null)
-            when (val result = GoogleAuthHelper.signInWithGoogle(context)) {
+            // Add a brief subtle delay for a realistic native sign-in transition
+            kotlinx.coroutines.delay(250)
+            when (val result = GoogleAuthHelper.signInWithGoogle(context, preferredEmail = preferredEmail, preferredName = preferredName)) {
                 is GoogleAuthResult.Success -> {
                     repository.setSignedIn(
                         signedIn = true,
@@ -308,17 +350,17 @@ class GrimmViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun signInWithGoogleDirect(
-        name: String = "Google User",
-        email: String = "mdarfaan5178@gmail.com",
-        avatarUrl: String? = null
-    ) {
+    fun signInWithGoogleAccount(email: String, displayName: String? = null) {
+        val cleanEmail = if (email.isNotBlank()) email.trim() else "user@gmail.com"
+        val derivedName = displayName?.takeIf { it.isNotBlank() }
+            ?: cleanEmail.substringBefore("@").replace(".", " ").replaceFirstChar { it.uppercase() }
+
         repository.setSignedIn(
             signedIn = true,
-            name = name,
-            email = email,
+            name = derivedName,
+            email = cleanEmail,
             isGoogle = true,
-            avatarUrl = avatarUrl
+            avatarUrl = null
         )
         _uiState.value = _uiState.value.copy(
             isSigningInWithGoogle = false,
@@ -386,13 +428,17 @@ class GrimmViewModel(application: Application) : AndroidViewModel(application) {
             return
         }
 
+        val isSearching = _uiState.value.isWebSearchActive || isExplicitWebSearchIntent(text)
+        val cleanSearchQuery = GrimmWebSearchService.extractSearchTerms(text).ifBlank { text }
+
         val userMessage = ChatMessage(
             id = UUID.randomUUID().toString(),
             sender = MessageSender.USER,
             text = if (text.isNotBlank()) text else "Analyze this image",
             attachedImageUri = attachedUri,
             timestamp = System.currentTimeMillis(),
-            isTemporary = _uiState.value.currentMode == AssistantMode.TEMPORARY
+            isTemporary = _uiState.value.currentMode == AssistantMode.TEMPORARY,
+            isWebSearch = isSearching
         )
 
         val updatedMessages = _uiState.value.messages + userMessage
@@ -401,7 +447,8 @@ class GrimmViewModel(application: Application) : AndroidViewModel(application) {
             userInput = "",
             attachedImageUri = null,
             attachedImageBase64 = null,
-            isLoading = true
+            isLoading = true,
+            searchStatusMessage = if (isSearching) "Browsing live web for '$cleanSearchQuery'..." else null
         )
 
         // Title generation for first user message
@@ -411,6 +458,15 @@ class GrimmViewModel(application: Application) : AndroidViewModel(application) {
         }
 
         viewModelScope.launch {
+            var webResults = emptyList<WebSearchResult>()
+            if (isSearching && text.isNotBlank()) {
+                try {
+                    webResults = webSearchService.searchWeb(cleanSearchQuery)
+                } catch (e: Exception) {
+                    android.util.Log.e("GrimmViewModel", "Web search failed", e)
+                }
+            }
+
             val historyPairs = updatedMessages
                 .filter { it.sender != MessageSender.SYSTEM && !it.isImage }
                 .chunked(2)
@@ -426,7 +482,8 @@ class GrimmViewModel(application: Application) : AndroidViewModel(application) {
                 tone = _uiState.value.tone,
                 style = _uiState.value.outputStyle,
                 imageBase64 = attachedBase64,
-                conversationHistory = historyPairs
+                conversationHistory = historyPairs,
+                searchContext = if (webResults.isNotEmpty()) webResults else null
             )
 
             val assistantMsg = ChatMessage(
@@ -435,13 +492,16 @@ class GrimmViewModel(application: Application) : AndroidViewModel(application) {
                 text = responseText,
                 timestamp = System.currentTimeMillis(),
                 outputStyle = _uiState.value.outputStyle,
-                isTemporary = _uiState.value.currentMode == AssistantMode.TEMPORARY
+                isTemporary = _uiState.value.currentMode == AssistantMode.TEMPORARY,
+                isWebSearch = webResults.isNotEmpty(),
+                webResults = webResults
             )
 
             val finalMessages = _uiState.value.messages + assistantMsg
             _uiState.value = _uiState.value.copy(
                 messages = finalMessages,
-                isLoading = false
+                isLoading = false,
+                searchStatusMessage = null
             )
 
             if (_uiState.value.currentMode == AssistantMode.NORMAL) {

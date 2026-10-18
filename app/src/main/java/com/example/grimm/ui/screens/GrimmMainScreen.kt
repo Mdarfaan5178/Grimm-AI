@@ -37,10 +37,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.AutoFixHigh
-import androidx.compose.material.icons.filled.FormatListBulleted
-import androidx.compose.material.icons.filled.Notes
+import androidx.compose.material.icons.automirrored.filled.FormatListBulleted
+import androidx.compose.material.icons.automirrored.filled.Notes
+import androidx.compose.material.icons.automirrored.filled.ShortText
+import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Shield
-import androidx.compose.material.icons.filled.ShortText
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.statusBars
@@ -170,8 +171,7 @@ fun GrimmMainScreen(
             isSigningInWithGoogle = uiState.isSigningInWithGoogle,
             googleAuthError = uiState.googleAuthError,
             onSignIn = { name, email -> viewModel.signIn(name, email) },
-            onGoogleSignIn = { viewModel.signInWithGoogle(context) },
-            onGoogleSignInDirect = { name, email -> viewModel.signInWithGoogleDirect(name, email) },
+            onGoogleSignIn = { preferredEmail -> viewModel.signInWithGoogle(context, preferredEmail) },
             onSignOut = { viewModel.signOut() },
             onDismiss = { viewModel.setShowAuthDialog(false) }
         )
@@ -438,9 +438,9 @@ fun GrimmChatContent(
                         leadingIcon = {
                             Icon(
                                 imageVector = when (style) {
-                                    OutputStyle.PARAGRAPH -> Icons.Default.Notes
-                                    OutputStyle.BULLET_POINTS -> Icons.Default.FormatListBulleted
-                                    OutputStyle.SHORT_SENTENCES -> Icons.Default.ShortText
+                                    OutputStyle.PARAGRAPH -> Icons.AutoMirrored.Filled.Notes
+                                    OutputStyle.BULLET_POINTS -> Icons.AutoMirrored.Filled.FormatListBulleted
+                                    OutputStyle.SHORT_SENTENCES -> Icons.AutoMirrored.Filled.ShortText
                                 },
                                 contentDescription = null,
                                 modifier = Modifier.size(14.dp)
@@ -456,6 +456,28 @@ fun GrimmChatContent(
                         modifier = Modifier.testTag("style_chip_${style.name}")
                     )
                 }
+
+                // Live Web Search toggle chip
+                FilterChip(
+                    selected = uiState.isWebSearchActive,
+                    onClick = { viewModel.toggleWebSearch() },
+                    label = { Text("Web Search", fontSize = 11.sp) },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.Language,
+                            contentDescription = null,
+                            modifier = Modifier.size(14.dp)
+                        )
+                    },
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = Color(0xFF0284C7),
+                        selectedLabelColor = Color.White,
+                        selectedLeadingIconColor = Color.White,
+                        containerColor = GrimmOffWhite,
+                        labelColor = GrimmTextPrimary
+                    ),
+                    modifier = Modifier.testTag("toggle_web_search_chip")
+                )
 
                 // Audio Stop indicator (if speaking)
                 if (isSpeaking) {
@@ -516,7 +538,7 @@ fun GrimmChatContent(
                     ) {
                         // Hero banner art
                         Image(
-                            painter = painterResource(id = R.drawable.grimm_hero_banner),
+                            painter = painterResource(id = R.drawable.grimm),
                             contentDescription = "Grimm AI Hero Banner",
                             contentScale = ContentScale.Crop,
                             modifier = Modifier
@@ -549,7 +571,7 @@ fun GrimmChatContent(
                         ) {
                             val suggestions = listOf(
                                 "Explain Kotlin Coroutines StateFlow vs SharedFlow",
-                                "Write a dark fairy tale fable of an AI oracle",
+                                "Search live web: Latest breakthroughs in astronomy & space exploration",
                                 "Render visual: A glowing cobalt raven in cyber library"
                             )
                             suggestions.forEach { prompt ->
@@ -605,15 +627,15 @@ fun GrimmChatContent(
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     CircularProgressIndicator(
-                                        color = GrimmLightBlue,
+                                        color = if (uiState.isWebSearchActive) Color(0xFF0284C7) else GrimmLightBlue,
                                         modifier = Modifier.size(20.dp),
                                         strokeWidth = 2.dp
                                     )
                                     Spacer(modifier = Modifier.width(10.dp))
                                     Text(
-                                        text = "Grimm AI is analyzing...",
+                                        text = uiState.searchStatusMessage ?: if (uiState.isWebSearchActive) "Searching live web & synthesizing..." else "Grimm AI is analyzing...",
                                         fontSize = 12.sp,
-                                        color = GrimmTextSecondary,
+                                        color = if (uiState.isWebSearchActive) Color(0xFF0369A1) else GrimmTextSecondary,
                                         fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
                                     )
                                 }
@@ -715,18 +737,41 @@ fun GrimmChatContent(
                                 )
                             },
                             modifier = Modifier
-                                .size(38.dp)
+                                .size(36.dp)
                                 .testTag("attach_picture_button")
                         ) {
                             Icon(
                                 imageVector = Icons.Default.AddPhotoAlternate,
                                 contentDescription = "Attach picture from gallery",
                                 tint = if (uiState.attachedImageUri != null) GrimmLightBlue else GrimmDarkBlue,
-                                modifier = Modifier.size(22.dp)
+                                modifier = Modifier.size(20.dp)
                             )
                         }
 
-                        Spacer(modifier = Modifier.width(6.dp))
+                        // Live Web Search toggle button
+                        IconButton(
+                            onClick = { viewModel.toggleWebSearch() },
+                            modifier = Modifier
+                                .size(36.dp)
+                                .testTag("toggle_web_search_button")
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(30.dp)
+                                    .clip(CircleShape)
+                                    .background(if (uiState.isWebSearchActive) Color(0xFFE0F2FE) else Color.Transparent),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Language,
+                                    contentDescription = if (uiState.isWebSearchActive) "Live Web Search Active" else "Enable Live Web Search",
+                                    tint = if (uiState.isWebSearchActive) Color(0xFF0284C7) else GrimmDarkBlue,
+                                    modifier = Modifier.size(19.dp)
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.width(4.dp))
 
                         OutlinedTextField(
                             value = uiState.userInput,
@@ -735,8 +780,9 @@ fun GrimmChatContent(
                                 Text(
                                     text = when {
                                         uiState.isImageMode -> "Enter visual prompt to generate..."
+                                        uiState.isWebSearchActive -> "Search live web with Grimm AI..."
                                         uiState.attachedImageUri != null -> "Ask Grimm AI about this picture..."
-                                        else -> "Message Grimm AI..."
+                                        else -> "Message Grimm AI or search web..."
                                     },
                                     fontSize = 13.sp,
                                     color = GrimmTextMuted

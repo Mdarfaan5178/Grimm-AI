@@ -1,6 +1,6 @@
 {
   "name": "Grimm AI",
-  "description": "Intelligent AI assistant featuring Normal and Temporary modes, free live image generation, custom voice and tone personas, and saved chat history.",
+  "description": "Intelligent AI assistant featuring live web search and source grounding, Normal and Temporary modes, free live image generation, custom voice and tone personas, and saved chat history.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
