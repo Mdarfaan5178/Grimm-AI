@@ -12,12 +12,18 @@ import com.example.grimm.ui.screens.GrimmMainScreen
 import com.example.ui.theme.GrimmOffWhite
 import com.example.ui.theme.MyApplicationTheme
 import com.example.grimm.viewmodel.GrimmViewModel
+import com.github.javiersantos.appupdater.AppUpdater
+import com.github.javiersantos.appupdater.enums.UpdateFrom
 
 class MainActivity : ComponentActivity() {
     private val viewModel: GrimmViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        AppUpdater(this)
+    .setUpdateFrom(UpdateFrom.GITHUB)
+    .setGitHubUserAndRepo("ReaperXMPG", "Grimm-AI")
+    .start()
         enableEdgeToEdge()
         setContent {
             MyApplicationTheme {
