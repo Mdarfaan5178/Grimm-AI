@@ -22,6 +22,11 @@ jobs:
 
       - name: Install Dependencies & Build
         run: |
+          if [ -d "Grimm-AI/Grimm-AI" ]; then
+            cd Grimm-AI/Grimm-AI
+          elif [ -d "Grimm-AI" ]; then
+            cd Grimm-AI
+          fi
           npm install
           npm run build --if-present
 
@@ -36,35 +41,53 @@ jobs:
 
       - name: Create google-services.json
         run: |
-          mkdir -p app/src/main
-          echo '{
-            "project_info": {
-              "project_number": "1234567890",
-              "project_id": "grimm-ai",
-              "storage_bucket": "grimm-ai.appspot.com"
-            },
-            "client": [
-              {
-                "client_info": {
-                  "mobilesdk_app_id": "1:1234567890:android:abcdef123456",
-                  "android_client_info": {
-                    "package_name": "com.aistudio.grimmai.kznxqt"
+          APP_DIR=""
+          if [ -d "Grimm-AI/Grimm-AI/app" ]; then
+            APP_DIR="Grimm-AI/Grimm-AI/app"
+          elif [ -d "Grimm-AI/app" ]; then
+            APP_DIR="Grimm-AI/app"
+          elif [ -d "app" ]; then
+            APP_DIR="app"
+          fi
+
+          if [ -n "$APP_DIR" ]; then
+            mkdir -p "$APP_DIR"
+            echo '{
+              "project_info": {
+                "project_number": "1234567890",
+                "project_id": "grimm-ai",
+                "storage_bucket": "grimm-ai.appspot.com"
+              },
+              "client": [
+                {
+                  "client_info": {
+                    "mobilesdk_app_id": "1:1234567890:android:abcdef123456",
+                    "android_client_info": {
+                      "package_name": "com.aistudio.grimmai.kznxqt"
+                    }
+                  },
+                  "oauth_client": [],
+                  "services": {
+                    "analytics_service": { "status": 1 },
+                    "app_invite_service": { "status": 1 },
+                    "ads_service": { "status": 2 }
                   }
-                },
-                "oauth_client": [],
-                "services": {
-                  "analytics_service": { "status": 1 },
-                  "app_invite_service": { "status": 1 },
-                  "ads_service": { "status": 2 }
                 }
-              }
-            ],
-            "configuration_version": "1"
-          }' > app/google-services.json
+              ],
+              "configuration_version": "1"
+            }' > "$APP_DIR/google-services.json"
+          fi
 
       - name: Build APK with Gradle
         run: |
-          cd android || cd .
+          if [ -d "Grimm-AI/Grimm-AI/android" ]; then
+            cd Grimm-AI/Grimm-AI/android
+          elif [ -d "Grimm-AI/android" ]; then
+            cd Grimm-AI/android
+          elif [ -d "android" ]; then
+            cd android
+          fi
+
           chmod +x gradlew || gradle wrapper
           ./gradlew clean assembleDebug --no-daemon --stacktrace
 
