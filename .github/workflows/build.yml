@@ -34,13 +34,10 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
 
-      - name: Ensure Gradle Wrapper & Build APK
+      - name: Build APK with Gradle
         run: |
           if [ -d "Grimm-AI/android" ]; then
             cd Grimm-AI/android
@@ -62,4 +59,3 @@ jobs:
           path: |
             **/build/outputs/apk/debug/*.apk
           retention-days: 7
-          
