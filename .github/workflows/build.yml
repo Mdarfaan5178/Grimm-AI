@@ -39,7 +39,6 @@ jobs:
 
       - name: Create google-services.json if missing
         run: |
-          # Finds the correct app module directory and creates a dummy or injected google-services.json if needed
           TARGET_DIR=""
           if [ -d "Grimm-AI/app" ]; then
             TARGET_DIR="Grimm-AI/app"
@@ -84,7 +83,8 @@ jobs:
           fi
 
           chmod +x gradlew
-          ./gradlew clean assembleDebug --no-daemon --stacktrace
+          # Using --info so we can see the exact error output line right before failure
+          ./gradlew clean assembleDebug --no-daemon --info
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
@@ -93,3 +93,4 @@ jobs:
           path: |
             **/build/outputs/apk/debug/*.apk
           retention-days: 7
+          
