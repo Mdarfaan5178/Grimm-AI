@@ -34,19 +34,20 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
 
       - name: Ensure Gradle Wrapper & Build APK
         run: |
-          # Navigate into the project directory if nested
           if [ -d "Grimm-AI/android" ]; then
             cd Grimm-AI/android
           elif [ -d "android" ]; then
             cd android
           fi
 
-          # Initialize Gradle wrapper if missing
           if [ ! -f "./gradlew" ]; then
             gradle wrapper
           fi
@@ -61,3 +62,4 @@ jobs:
           path: |
             **/build/outputs/apk/debug/*.apk
           retention-days: 7
+          
