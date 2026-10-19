@@ -15,21 +15,6 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - name: Install Dependencies & Build
-        run: |
-          if [ -d "Grimm-AI/Grimm-AI" ]; then
-            cd Grimm-AI/Grimm-AI
-          elif [ -d "Grimm-AI" ]; then
-            cd Grimm-AI
-          fi
-          npm install
-          npm run build --if-present
-
       - name: Set up JDK 17
         uses: actions/setup-java@v5
         with:
@@ -42,54 +27,65 @@ jobs:
       - name: Create google-services.json
         run: |
           APP_DIR=""
-          if [ -d "Grimm-AI/Grimm-AI/app" ]; then
-            APP_DIR="Grimm-AI/Grimm-AI/app"
+          if [ -d "app" ]; then
+            APP_DIR="app"
           elif [ -d "Grimm-AI/app" ]; then
             APP_DIR="Grimm-AI/app"
-          elif [ -d "app" ]; then
+          elif [ -d "Grimm-AI/Grimm-AI/app" ]; then
+            APP_DIR="Grimm-AI/Grimm-AI/app"
+          else
+            mkdir -p app/src/main
             APP_DIR="app"
           fi
 
-          if [ -n "$APP_DIR" ]; then
-            mkdir -p "$APP_DIR"
-            echo '{
-              "project_info": {
-                "project_number": "1234567890",
-                "project_id": "grimm-ai",
-                "storage_bucket": "grimm-ai.appspot.com"
-              },
-              "client": [
-                {
-                  "client_info": {
-                    "mobilesdk_app_id": "1:1234567890:android:abcdef123456",
-                    "android_client_info": {
-                      "package_name": "com.aistudio.grimmai.kznxqt"
-                    }
-                  },
-                  "oauth_client": [],
-                  "services": {
-                    "analytics_service": { "status": 1 },
-                    "app_invite_service": { "status": 1 },
-                    "ads_service": { "status": 2 }
+          echo "Placing google-services.json into $APP_DIR"
+          echo '{
+            "project_info": {
+              "project_number": "1234567890",
+              "project_id": "grimm-ai",
+              "storage_bucket": "grimm-ai.appspot.com"
+            },
+            "client": [
+              {
+                "client_info": {
+                  "mobilesdk_app_id": "1:1234567890:android:abcdef123456",
+                  "android_client_info": {
+                    "package_name": "com.aistudio.grimmai.kznxqt"
                   }
+                },
+                "oauth_client": [],
+                "services": {
+                  "analytics_service": { "status": 1 },
+                  "app_invite_service": { "status": 1 },
+                  "ads_service": { "status": 2 }
                 }
-              ],
-              "configuration_version": "1"
-            }' > "$APP_DIR/google-services.json"
-          fi
+              }
+            ],
+            "configuration_version": "1"
+          }' > "$APP_DIR/google-services.json"
 
       - name: Build APK with Gradle
         run: |
-          if [ -d "Grimm-AI/Grimm-AI/android" ]; then
-            cd Grimm-AI/Grimm-AI/android
-          elif [ -d "Grimm-AI/android" ]; then
-            cd Grimm-AI/android
-          elif [ -d "android" ]; then
+          if [ -f "gradlew" ]; then
+            chmod +x gradlew
+            ./gradlew clean assembleDebug --no-daemon --stacktrace
+          elif [ -f "android/gradlew" ]; then
             cd android
+            chmod +x gradlew
+            ./gradlew clean assembleDebug --no-daemon --stacktrace
+          elif [ -f "Grimm-AI/gradlew" ]; then
+            cd Grimm-AI
+            chmod +x gradlew
+            ./gradlew clean assembleDebug --no-daemon --stacktrace
+          elif [ -f "Grimm-AI/Grimm-AI/gradlew" ]; then
+            cd Grimm-AI/Grimm-AI
+            chmod +x gradlew
+            ./gradlew clean assembleDebug --no-daemon --stacktrace
+          else
+            gradle wrapper
+            chmod +x gradlew
+            ./gradlew clean assembleDebug --no-daemon --stacktrace
           fi
-
-          chmod +x gradlew || gradle wrapper
-          ./gradlew clean assembleDebug --no-daemon --stacktrace
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
