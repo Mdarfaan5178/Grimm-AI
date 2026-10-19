@@ -50,7 +50,8 @@ jobs:
           fi
 
           chmod +x gradlew
-          ./gradlew assembleDebug --stacktrace
+          # Clean build to wipe out corrupted KSP/IntelliJ compiler caches
+          ./gradlew clean assembleDebug --no-daemon --stacktrace
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
