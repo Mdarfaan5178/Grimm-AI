@@ -37,6 +37,40 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
 
+      - name: Create google-services.json if missing
+        run: |
+          # Finds the correct app module directory and creates a dummy or injected google-services.json if needed
+          TARGET_DIR=""
+          if [ -d "Grimm-AI/app" ]; then
+            TARGET_DIR="Grimm-AI/app"
+          elif [ -d "app" ]; then
+            TARGET_DIR="app"
+          fi
+
+          if [ -n "$TARGET_DIR" ] && [ ! -f "$TARGET_DIR/google-services.json" ]; then
+            echo "Creating a placeholder google-services.json to allow build to pass..."
+            echo '{
+              "project_info": {
+                "project_number": "1234567890",
+                "project_id": "grimm-ai-placeholder",
+                "storage_bucket": "grimm-ai-placeholder.appspot.com"
+              },
+              "client": [{
+                "client_info": {
+                  "mobilesdk_app_id": "1:1234567890:android:placeholder",
+                  "android_client_id": "placeholder"
+                },
+                "oauth_client": [],
+                "services": {
+                  "analytics_service": { "status": 1 },
+                  "app_invite_service": { "status": 1 },
+                  "ads_service": { "status": 2 }
+                }
+              }],
+              "configuration_version": "1"
+            }' > "$TARGET_DIR/google-services.json"
+          fi
+
       - name: Build APK with Gradle
         run: |
           if [ -d "Grimm-AI/android" ]; then
@@ -50,7 +84,6 @@ jobs:
           fi
 
           chmod +x gradlew
-          # Clean build to wipe out corrupted KSP/IntelliJ compiler caches
           ./gradlew clean assembleDebug --no-daemon --stacktrace
 
       - name: Upload APK Artifact
@@ -60,4 +93,3 @@ jobs:
           path: |
             **/build/outputs/apk/debug/*.apk
           retention-days: 7
-          
