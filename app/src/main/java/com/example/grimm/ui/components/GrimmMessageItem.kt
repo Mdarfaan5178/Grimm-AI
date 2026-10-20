@@ -59,6 +59,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.SubcomposeAsyncImage
 import com.example.grimm.model.ChatMessage
 import com.example.grimm.model.MessageSender
+import com.example.grimm.ui.markdown.GrimmMarkdownMessage
 import com.example.ui.theme.GrimmBorder
 import com.example.ui.theme.GrimmCyan
 import com.example.ui.theme.GrimmDarkBlue
@@ -109,7 +110,7 @@ fun GrimmMessageItem(
         }
 
         Column(
-            modifier = Modifier.width(if (isUser) 300.dp else 320.dp),
+            modifier = Modifier.widthIn(max = if (isUser) 300.dp else 560.dp),
             horizontalAlignment = if (isUser) Alignment.End else Alignment.Start
         ) {
             // Message Card
@@ -654,40 +655,10 @@ fun RenderFormattedText(
     val context = LocalContext.current
 
     Column {
-        // If text contains code blocks ```, format appropriately
-        if (text.contains("```")) {
-            val segments = text.split("```")
-            segments.forEachIndexed { index, segment ->
-                if (index % 2 == 1) {
-                    // Code block
-                    Surface(
-                        shape = RoundedCornerShape(8.dp),
-                        color = Color(0xFF0F172A),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 4.dp)
-                    ) {
-                        Text(
-                            text = segment.trim(),
-                            fontFamily = FontFamily.Monospace,
-                            fontSize = 12.sp,
-                            color = GrimmCyan,
-                            modifier = Modifier.padding(10.dp)
-                        )
-                    }
-                } else if (segment.isNotBlank()) {
-                    ClickableMessageText(
-                        text = segment.trim(),
-                        isUser = isUser
-                    )
-                }
-            }
-        } else {
-            ClickableMessageText(
-                text = text,
-                isUser = isUser
-            )
-        }
+        GrimmMarkdownMessage(
+            text = text,
+            isUser = isUser
+        )
 
         // Dedicated clickable YouTube badge if ReaperXMPG channel is mentioned
         val mentionsReaperChannel = !isUser && (

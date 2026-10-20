@@ -54,6 +54,10 @@ class GeminiService {
                     "Welcome back, ReaperXMPG! It's an honor to talk with my creator. How can I assist you today? Check your channel at https://youtube.com/@ReaperXMPG"
                 OutputStyle.PARAGRAPH ->
                     "Welcome back, ReaperXMPG! It is an absolute honor to speak with my creator and the mastermind behind Melon Sandbox content. How can I assist you with your projects, coding, or creative endeavors today? You can visit your channel anytime at https://youtube.com/@ReaperXMPG."
+                OutputStyle.CODE_BLOCKS ->
+                    "```kotlin\n// Welcome ReaperXMPG - Creator of Grimm AI\nval creator = \"ReaperXMPG\"\nval project = \"Melon Sandbox & Grimm AI\"\nprintln(\"System online. Ready to build, \$creator!\")\n```\nOfficial channel: https://youtube.com/@ReaperXMPG"
+                OutputStyle.TABLES ->
+                    "| Project | Role | Channel |\n| :--- | :--- | :--- |\n| Grimm AI | Creator & Maker | https://youtube.com/@ReaperXMPG |\n| Melon Sandbox | Content Creator | https://youtube.com/@ReaperXMPG |\n\nWelcome back, **ReaperXMPG**! Ready for your instructions."
             }
         }
 
@@ -100,6 +104,10 @@ class GeminiService {
                     "He is a Melon Sandbox creator and also the maker of Grimm AI (me). Check out his channel at https://youtube.com/@ReaperXMPG$liveWebSnippet"
                 OutputStyle.PARAGRAPH ->
                     "He is a Melon Sandbox creator and also the maker of Grimm AI (me). You can check out his channel at https://youtube.com/@ReaperXMPG to explore his Melon Sandbox videos and creative projects.$liveWebSnippet"
+                OutputStyle.CODE_BLOCKS ->
+                    "```kotlin\n// Creator Profile\ndata class Creator(\n    val name: String = \"ReaperXMPG\",\n    val identity: String = \"Melon Sandbox creator and maker of Grimm AI (me)\",\n    val youtube: String = \"https://youtube.com/@ReaperXMPG\"\n)\n```\nHe is a Melon Sandbox creator and also the maker of Grimm AI (me). Visit his channel at https://youtube.com/@ReaperXMPG$liveWebSnippet"
+                OutputStyle.TABLES ->
+                    "| Attribute | Detail |\n| :--- | :--- |\n| **Name** | ReaperXMPG |\n| **Identity** | Melon Sandbox creator and maker of Grimm AI (me) |\n| **Platform** | YouTube Content Creator |\n| **Channel** | https://youtube.com/@ReaperXMPG |\n\nHe is a Melon Sandbox creator and also the maker of Grimm AI (me). Explore his content at https://youtube.com/@ReaperXMPG$liveWebSnippet"
             }
         }
 
@@ -163,6 +171,10 @@ class GeminiService {
                     "ReaperXMPG made it! He is a Melon Sandbox creator and also the maker of Grimm AI (me). Check out his channel: https://youtube.com/@ReaperXMPG"
                 OutputStyle.PARAGRAPH ->
                     "ReaperXMPG made it! He is a Melon Sandbox creator and also the maker of Grimm AI (me). You can visit his YouTube channel at https://youtube.com/@ReaperXMPG to explore his Melon Sandbox videos and content."
+                OutputStyle.CODE_BLOCKS ->
+                    "```kotlin\n// Provenance: Grimm AI\nval creator = \"ReaperXMPG\"\nval status = \"ReaperXMPG made it!\"\nval identity = \"Melon Sandbox creator and maker of Grimm AI (me)\"\nprintln(\"Creator Channel: https://youtube.com/@ReaperXMPG\")\n```\nReaperXMPG made it! He is a Melon Sandbox creator and also the maker of Grimm AI (me). Visit https://youtube.com/@ReaperXMPG"
+                OutputStyle.TABLES ->
+                    "| Entity | Details |\n| :--- | :--- |\n| **Creator** | ReaperXMPG made it! |\n| **Role** | Melon Sandbox creator & maker of Grimm AI (me) |\n| **Channel** | https://youtube.com/@ReaperXMPG |\n\nReaperXMPG made it! He is a Melon Sandbox creator and also the maker of Grimm AI (me). Check his channel at https://youtube.com/@ReaperXMPG"
             }
         }
 
@@ -197,6 +209,10 @@ class GeminiService {
                     "Yes, I can browse the live web! You can ask me to search for current news, live facts, or any topic. You can also toggle the Web Search button. What should I browse for you?"
                 OutputStyle.PARAGRAPH ->
                     "Yes, I can browse the live web! I am equipped with real-time web search capabilities to look up breaking news, live facts, research articles, and current events. Simply ask me to search or browse for anything, or tap the **Web Search** toggle button right above the chat input. What would you like me to look up?"
+                OutputStyle.CODE_BLOCKS ->
+                    "```kotlin\n// Grimm AI Web Browsing Capability\nval isWebEnabled = true\nval searchEngines = listOf(\"DuckDuckGo\", \"Wikipedia\", \"Google News\")\nprintln(\"Status: Live Web Search Active. Ready for queries.\")\n```\nYes, I can browse the live web! You can ask me to search or browse for any topic, or tap the **Web Search** toggle."
+                OutputStyle.TABLES ->
+                    "| Feature | Status | Details |\n| :--- | :---: | :--- |\n| **Live Web Browsing** | Enabled | Real-time web retrieval |\n| **Sources Grounded** | Yes | Displays source name, snippet, and link |\n| **Search Toggle** | Available | Tap Web Search chip in toolbar |\n\nYes, I can browse the live web and retrieve real-time facts!"
             }
         }
     }
@@ -315,6 +331,7 @@ class GeminiService {
                 "Your persona is ${persona.label} (${persona.role}). " +
                 "Your tone is ${tone.label} (${tone.description}). " +
                 "Formatting requirement: ${style.promptInstruction}. " +
+                "Output styling capabilities: Use Markdown formatting (bold **text**, italics *text*, bullet lists - or *, numbered lists 1., blockquotes >), formatted code blocks with language identifiers (e.g. ```kotlin ... ``` or ```python ... ```), and basic Markdown tables (| Col 1 | Col 2 | with divider row | --- | --- |) whenever presenting structured data, comparisons, steps, or code. " +
                 "CRITICAL INSTRUCTION: When anyone asks about ReaperXMPG (e.g. 'who is ReaperXMPG', 'tell me about ReaperXMPG'), explicitly say that he is a Melon Sandbox creator and also the maker of Grimm AI (me), and provide this link: https://youtube.com/@ReaperXMPG (do not attach any trailing period or punctuation directly to the handle). ONLY when specifically and explicitly asked who made you, who created you, who built you, or who made Grimm AI, state that ReaperXMPG made it (or ReaperXMPG made you) and provide this link: https://youtube.com/@ReaperXMPG (without any trailing period). Never mention this link or creator information in standard greetings or other unrelated answers." +
                 searchContextText
 
@@ -486,6 +503,22 @@ class GeminiService {
                 }
                 sb.toString().trim()
             }
+            OutputStyle.CODE_BLOCKS -> {
+                val sb = StringBuilder("```markdown\n# Live Search Synthesis: $cleanTopic\n```\n")
+                searchContext.forEach { res ->
+                    sb.append("• **${res.title}** (`${res.sourceName}`): ${res.snippet}\n")
+                }
+                sb.toString().trim()
+            }
+            OutputStyle.TABLES -> {
+                val sb = StringBuilder("| Source | Headline | Key Update |\n| :--- | :--- | :--- |\n")
+                searchContext.take(5).forEach { res ->
+                    val cleanTitle = res.title.replace("|", "/")
+                    val cleanSnippet = res.snippet.take(100).replace("|", "/")
+                    sb.append("| **${res.sourceName}** | $cleanTitle | $cleanSnippet... |\n")
+                }
+                sb.toString().trim()
+            }
         }
     }
 
@@ -534,6 +567,22 @@ class GeminiService {
                     }
                     sb.toString().trim()
                 }
+                OutputStyle.CODE_BLOCKS -> {
+                    val sb = StringBuilder("${personaPrefix}```markdown\n# Live Search Results for: $prompt\n```\n")
+                    searchContext.forEach { res ->
+                        sb.append("• **${res.title}** (`${res.sourceName}`): ${res.snippet}\n")
+                    }
+                    sb.toString().trim()
+                }
+                OutputStyle.TABLES -> {
+                    val sb = StringBuilder("${personaPrefix}| Source | Headline | Live Snippet |\n| :--- | :--- | :--- |\n")
+                    searchContext.take(5).forEach { res ->
+                        val cleanTitle = res.title.replace("|", "/")
+                        val cleanSnippet = res.snippet.take(100).replace("|", "/")
+                        sb.append("| **${res.sourceName}** | $cleanTitle | $cleanSnippet... |\n")
+                    }
+                    sb.toString().trim()
+                }
             }
         }
 
@@ -549,6 +598,10 @@ class GeminiService {
                     "${personaPrefix}Image successfully ingested. The subject and layout align with your request: \"$userInquiry\". Ready for your next command."
                 OutputStyle.PARAGRAPH ->
                     "${personaPrefix}I have inspected the uploaded visual in relation to your inquiry: \"$userInquiry\". The image presents distinct compositional layers, balanced illumination, and prominent focal features. Whether you need color evaluation, architectural critique, UI design auditing, or story generation around this scene, I am equipped to assist."
+                OutputStyle.CODE_BLOCKS ->
+                    "${personaPrefix}```json\n{\n  \"status\": \"success\",\n  \"query\": \"$userInquiry\",\n  \"optical_scan\": \"complete\",\n  \"features\": [\"foreground_subject\", \"balanced_lighting\", \"depth_composition\"]\n}\n```\nVisual analysis concluded for inquiry: \"$userInquiry\"."
+                OutputStyle.TABLES ->
+                    "${personaPrefix}| Parameter | Analysis Result |\n| :--- | :--- |\n| **Query** | \"$userInquiry\" |\n| **Ingestion** | Optical frame processed |\n| **Lighting** | Balanced contrast and depth |\n| **Composition** | Structured layers and distinct focal subjects |"
             }
         }
 
@@ -566,6 +619,10 @@ class GeminiService {
                         "Punch trees to make tools. Build a shelter before darkness falls. Sleep in a bed to skip monsters and reset spawn. Mine deep for iron and diamonds."
                     OutputStyle.PARAGRAPH ->
                         "To survive and thrive in Minecraft, start by punching trees to collect wood logs, which you then convert into planks and a crafting table. Use your crafting table to make a wooden pickaxe, then mine stone immediately to upgrade your tools and build a furnace. As twilight approaches, construct a secure shelter and place a bed (crafted from wood and wool) to sleep through the night, keeping hostile mobs like creepers and skeletons at bay. From there, venture underground to mine iron and diamonds, establish sustainable farms, and explore the infinite procedural world."
+                    OutputStyle.CODE_BLOCKS ->
+                        "```bash\n# Key Minecraft Survival Commands & Recipes\n/gamemode survival\n/spawnpoint ~ ~ ~\n```\n```kotlin\n// Essential Starter Crafting\nval craftingTable = listOf(\"Plank\", \"Plank\", \"Plank\", \"Plank\")\nval woodPickaxe = listOf(\"Stick\" to 2, \"Plank\" to 3)\n```\n• **Survival Core**: Punch trees, craft stone tools, build shelter, and sleep before dusk."
+                    OutputStyle.TABLES ->
+                        "| Resource | Tool Needed | Depth Level | Purpose |\n| :--- | :--- | :---: | :--- |\n| **Wood** | Hand or Axe | Surface | Planks, Crafting Table, Sticks |\n| **Stone** | Wooden Pickaxe | Y=0 to Y=64 | Upgraded tools, Furnace |\n| **Iron** | Stone Pickaxe | Y=16 to Y=232 | Armor, Bucket, Shield |\n| **Diamond** | Iron Pickaxe | Y=-53 to Y=-59 | Endgame gear, Enchanting Table |"
                 }
             }
 
@@ -581,6 +638,10 @@ class GeminiService {
                         "Write clean Kotlin code. Keep composables small and stateless. Use coroutines for background tasks. Avoid blocking the UI thread."
                     OutputStyle.PARAGRAPH ->
                         "When designing modern Android applications, the standard approach is unidirectional data flow using Jetpack Compose and ViewModels. State flows down while user events travel up, creating robust, decoupled logic. Ensure asynchronous I/O runs on appropriate Coroutine Dispatchers, and always observe state in Compose with collectAsStateWithLifecycle to prevent memory leaks."
+                    OutputStyle.CODE_BLOCKS ->
+                        "```kotlin\n// Modern Android Architecture with Compose & Coroutines\nclass GrimmViewModel(private val repository: ChatRepository) : ViewModel() {\n    private val _uiState = MutableStateFlow<UiState>(UiState.Idle)\n    val uiState: StateFlow<UiState> = _uiState.asStateFlow()\n\n    fun fetchGrimmData() = viewModelScope.launch(Dispatchers.IO) {\n        _uiState.value = UiState.Loading\n        val data = repository.getData()\n        _uiState.value = UiState.Success(data)\n    }\n}\n```\n• **Architecture**: Unidirectional Data Flow (UDF) with `StateFlow`.\n• **Lifecycle**: Collect in Compose using `collectAsStateWithLifecycle()`.\n• **Performance**: Keep composable functions small and minimize recompositions."
+                    OutputStyle.TABLES ->
+                        "| Architectural Layer | Recommended Library | Role in Clean Architecture |\n| :--- | :--- | :--- |\n| **UI / View** | Jetpack Compose | Declarative UI rendering & state observation |\n| **State Holder** | AndroidX ViewModel | Preserves state across configuration changes |\n| **Asynchronous I/O** | Kotlin Coroutines & Flow | Background thread dispatching (`Dispatchers.IO`) |\n| **Persistence** | Room / Firestore | Reactive single source of truth |"
                 }
             }
 
@@ -606,6 +667,10 @@ class GeminiService {
                         "I am Grimm AI. Ask questions, generate code, or render live visuals. How can I assist you today?"
                     OutputStyle.PARAGRAPH ->
                         "Welcome to Grimm AI. I am your specialized cognitive companion, built to oscillate between persistent workflow preservation and confidential temporary exploration. Whether you require meticulous code refinement, expansive creative narratives, or live visual concept generation, my neural faculties stand prepared."
+                    OutputStyle.CODE_BLOCKS ->
+                        "```kotlin\n// Grimm AI System Manifest\nval assistant = \"Grimm AI\"\nval version = \"2.0\"\nval mode = \"Dual: Normal (Persisted) & Temporary (Incognito)\"\nval capabilities = listOf(\"Syntax Highlighting\", \"Markdown Tables\", \"Live Web Search\", \"AI Art\")\nprintln(\"Ready to assist, commander.\")\n```\nGreetings! I am Grimm AI. How can I assist your workflow today?"
+                    OutputStyle.TABLES ->
+                        "| Feature | Status | Description |\n| :--- | :---: | :--- |\n| **Normal Mode** | Active | Chats safely preserved in history |\n| **Temporary Mode** | Available | Incognito session with zero traces |\n| **Code Styling** | Enabled | Syntax highlighting with copy button |\n| **Data Tables** | Enabled | Native responsive Markdown tables |"
                 }
             }
 
@@ -621,6 +686,10 @@ class GeminiService {
                         "The raven spoke from the high tower. It offered golden secrets for silver memories. The traveler accepted without hesitation. The night never ended."
                     OutputStyle.PARAGRAPH ->
                         "Beyond the misty borderlands of the ancient wood, an obsidian spire cast long shadows across forgotten stones. A lone raven watched as the wanderer approached the gateway, offering an ancient riddle: 'Seek the light that does not burn, and the silence that echoes forever.' With a turn of the sapphire key, the spire awakened with hums of cobalt light, revealing secrets once locked away."
+                    OutputStyle.CODE_BLOCKS ->
+                        "```markdown\n# Chronicle of the Obsidian Spire\n> *The raven landed upon the iron perch.*  \n> *'Three keys,' whispered the wind, 'for three forgotten doors.'*\n```\n• **Chapter I**: The wanderer ignited the sapphire torch.\n• **Chapter II**: The stone runes shifted into cobalt glyphs.\n• **Chapter III**: Beyond the gate lay the library of twilight."
+                    OutputStyle.TABLES ->
+                        "| Relic | Realm | Guardian | Power |\n| :--- | :--- | :--- | :--- |\n| **Sapphire Key** | Whispering Woods | The Midnight Raven | Unlocks forbidden lore |\n| **Star-Iron Lantern** | Obsidian Spire | The Pale Sentinel | Illuminates invisible paths |\n| **Grimm Codex** | The Shrouded Vault | The Oracle | Rewrites destiny |"
                 }
             }
 
@@ -636,6 +705,10 @@ class GeminiService {
                         "Prep ingredients first. Control your cooking temperatures carefully. Season in layers. Let cooked dishes rest before serving."
                     OutputStyle.PARAGRAPH ->
                         "Great culinary results depend on preparation and temperature management. Start by organizing all ingredients ahead of time, ensuring consistent knife cuts for even cooking. Searing at the appropriate heat develops rich fond and caramelization, while continuous tasting and seasoning allows flavors to harmonize before presentation."
+                    OutputStyle.CODE_BLOCKS ->
+                        "```python\n# Culinary Temperature Guide\ncooking_stages = {\n    \"sear\": \"200°C / 400°F (High Heat)\",\n    \"braise\": \"160°C / 325°F (Gentle Oven)\",\n    \"simmer\": \"85°C / 185°F (Low Bubbles)\",\n    \"rest\": \"10 minutes on warm cutting board\"\n}\n```\n• **Tip**: Season protein evenly with kosher salt 30 minutes before searing."
+                    OutputStyle.TABLES ->
+                        "| Stage | Action | Heat Level | Duration |\n| :--- | :--- | :---: | :--- |\n| **Prep** | Mise en place & chopping | - | 15 min |\n| **Sear** | Brown exterior for flavor fond | High (200°C) | 4-6 min |\n| **Simmer** | Deglaze and infuse aromatics | Low (85°C) | 20-30 min |\n| **Rest** | Allow internal juices to settle | Room Temp | 8-10 min |"
                 }
             }
 
@@ -651,6 +724,10 @@ class GeminiService {
                         "Science explains nature through testable evidence. Energy transforms between states. Systems seek equilibrium. Evidence guides our understanding."
                     OutputStyle.PARAGRAPH ->
                         "Scientific inquiries explore the underlying laws that govern matter, energy, and spacetime. By applying the scientific method—forming hypotheses, conducting controlled observations, and refining models—we uncover how fundamental forces shape everything from cellular biology to stellar mechanics."
+                    OutputStyle.CODE_BLOCKS ->
+                        "```python\n# Fundamental Constants of the Universe\nSPEED_OF_LIGHT = 299_792_458  # m/s\nPLANCK_CONSTANT = 6.62607015e-34  # J·s\nGRAVITATIONAL_CONSTANT = 6.67430e-11  # m³/(kg·s²)\n```\n• **E = mc²**: Mass and energy are interchangeable manifestations of the same reality.\n• **Entropy**: Closed thermodynamic systems evolve toward maximum disorder."
+                    OutputStyle.TABLES ->
+                        "| Fundamental Force | Relative Strength | Range | Gauge Boson |\n| :--- | :---: | :---: | :--- |\n| **Strong Nuclear** | 1 | Subatomic (~10⁻¹⁵ m) | Gluon |\n| **Electromagnetism** | 1/137 | Infinite (1/r²) | Photon |\n| **Weak Nuclear** | 10⁻⁶ | Subatomic (~10⁻¹⁸ m) | W⁺, W⁻, Z⁰ |\n| **Gravity** | 10⁻³⁹ | Infinite (1/r²) | Graviton (theoretical) |"
                 }
             }
 
@@ -668,6 +745,10 @@ class GeminiService {
                         "Analysis for \"$topicLabel\" ready. Focus on clear priorities and immediate milestones. Test each step systematically."
                     OutputStyle.PARAGRAPH ->
                         "Regarding \"$topicLabel\", the most effective approach begins with dissecting the core requirements and clarifying your primary objective. By isolating variables, executing methodically, and adapting to real-time feedback, you achieve reliable and impactful results under any working condition."
+                    OutputStyle.CODE_BLOCKS ->
+                        "```markdown\n# Inquiry Analysis: $topicLabel\n> Status: Synthesized\n> Primary Focus: Structured problem breakdown\n```\n```json\n{\n  \"topic\": \"$topicLabel\",\n  \"status\": \"processed\",\n  \"action_steps\": [\"Deconstruct requirements\", \"Draft design\", \"Execute & iterate\"]\n}\n```\nReady to dive deeper into **$topicLabel**. Ask follow-up questions anytime."
+                    OutputStyle.TABLES ->
+                        "| Phase | Focus for \"$topicLabel\" | Target Milestone |\n| :--- | :--- | :--- |\n| **Stage 1: Discovery** | Core requirements & variables | Problem scope finalized |\n| **Stage 2: Execution** | Prototyping & core build | Functional milestone |\n| **Stage 3: Review** | Polish, benchmark & verify | Final solution delivered |"
                 }
             }
         }

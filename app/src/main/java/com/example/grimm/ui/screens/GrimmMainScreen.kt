@@ -43,6 +43,8 @@ import androidx.compose.material.icons.automirrored.filled.ShortText
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.Stop
+import androidx.compose.material.icons.filled.Code
+import androidx.compose.material.icons.filled.TableChart
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.material3.CircularProgressIndicator
@@ -443,6 +445,8 @@ fun GrimmChatContent(
                                     OutputStyle.PARAGRAPH -> Icons.AutoMirrored.Filled.Notes
                                     OutputStyle.BULLET_POINTS -> Icons.AutoMirrored.Filled.FormatListBulleted
                                     OutputStyle.SHORT_SENTENCES -> Icons.AutoMirrored.Filled.ShortText
+                                    OutputStyle.CODE_BLOCKS -> Icons.Default.Code
+                                    OutputStyle.TABLES -> Icons.Default.TableChart
                                 },
                                 contentDescription = null,
                                 modifier = Modifier.size(14.dp)

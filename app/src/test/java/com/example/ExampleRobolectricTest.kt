@@ -236,5 +236,101 @@ class ExampleRobolectricTest {
         assertFalse(viewModel.uiState.value.isSigningInWithGoogle)
         assertEquals(null, viewModel.uiState.value.googleAuthError)
     }
+
+    @Test
+    fun `test output style code blocks and tables selection and generation`() = kotlinx.coroutines.test.runTest {
+        val app = ApplicationProvider.getApplicationContext<Application>()
+        val viewModel = GrimmViewModel(app)
+
+        viewModel.setOutputStyle(OutputStyle.CODE_BLOCKS)
+        assertEquals(OutputStyle.CODE_BLOCKS, viewModel.uiState.value.outputStyle)
+
+        viewModel.setOutputStyle(OutputStyle.TABLES)
+        assertEquals(OutputStyle.TABLES, viewModel.uiState.value.outputStyle)
+
+        val service = com.example.grimm.service.GeminiService()
+        val codeResponse = service.generateResponse(
+            prompt = "write a kotlin function",
+            persona = AiPersona.SENIOR_DEV,
+            tone = AiTone.PROFESSIONAL,
+            style = OutputStyle.CODE_BLOCKS
+        )
+        assertTrue("Response should contain code block ```", codeResponse.contains("```"))
+        assertTrue("Response should mention kotlin", codeResponse.contains("kotlin", ignoreCase = true))
+
+        val tableResponse = service.generateResponse(
+            prompt = "compare android architecture layers",
+            persona = AiPersona.SENIOR_DEV,
+            tone = AiTone.PROFESSIONAL,
+            style = OutputStyle.TABLES
+        )
+        assertTrue("Response should contain table pipes |", tableResponse.contains("|"))
+        assertTrue("Response should contain table divider ---", tableResponse.contains("---"))
+    }
+
+    @Test
+    fun `test syntax highlighter and language normalizer`() {
+        val highlighted = com.example.grimm.ui.markdown.GrimmSyntaxHighlighter.highlight(
+            code = "fun calculateTotal(value: Int): String {\n    val name = \"Grimm\"\n    return \"Hello \$name\"\n}",
+            rawLanguage = "kotlin"
+        )
+        assertNotNull(highlighted)
+        assertTrue(highlighted.text.contains("calculateTotal"))
+        assertTrue(highlighted.spanStyles.isNotEmpty())
+
+        assertEquals("Kotlin", com.example.grimm.ui.markdown.GrimmSyntaxHighlighter.normalizeLanguageName("kt"))
+        assertEquals("Python", com.example.grimm.ui.markdown.GrimmSyntaxHighlighter.normalizeLanguageName("py"))
+        assertEquals("SQL", com.example.grimm.ui.markdown.GrimmSyntaxHighlighter.normalizeLanguageName("sql"))
+        assertEquals("Code", com.example.grimm.ui.markdown.GrimmSyntaxHighlighter.normalizeLanguageName(""))
+    }
+
+    @Test
+    fun `test markdown table parser parses headers alignments and data rows`() {
+        val tableLines = listOf(
+            "| Feature | Grimm AI | Standard |",
+            "| :--- | :---: | ---: |",
+            "| Code Blocks | Supported | Limited |",
+            "| Tables | Native | Plain |"
+        )
+        val table = com.example.grimm.ui.markdown.GrimmTableParser.parse(tableLines)
+        assertNotNull(table)
+        assertEquals(3, table!!.headers.size)
+        assertEquals("Feature", table.headers[0])
+        assertEquals("Grimm AI", table.headers[1])
+        assertEquals("Standard", table.headers[2])
+        assertEquals(androidx.compose.ui.text.style.TextAlign.Start, table.alignments[0])
+        assertEquals(androidx.compose.ui.text.style.TextAlign.Center, table.alignments[1])
+        assertEquals(androidx.compose.ui.text.style.TextAlign.End, table.alignments[2])
+        assertEquals(2, table.rows.size)
+        assertEquals("Code Blocks", table.rows[0][0])
+        assertEquals("Native", table.rows[1][1])
+    }
+
+    @Test
+    fun `test markdown block parser recognizes code blocks headings lists and tables`() {
+        val markdownText = """
+            # Heading 1
+            Here is an intro with **bold** and *italic* text.
+            - Bullet 1
+            - Bullet 2
+            1. Step One
+            2. Step Two
+            > This is a blockquote
+            ```kotlin
+            val x = 42
+            ```
+            | Col A | Col B |
+            | --- | --- |
+            | Val 1 | Val 2 |
+        """.trimIndent()
+
+        val blocks = com.example.grimm.ui.markdown.GrimmMarkdownParser.parse(markdownText)
+        assertTrue(blocks.any { it is com.example.grimm.ui.markdown.MarkdownBlock.Heading && it.text == "Heading 1" })
+        assertTrue(blocks.any { it is com.example.grimm.ui.markdown.MarkdownBlock.BulletItem })
+        assertTrue(blocks.any { it is com.example.grimm.ui.markdown.MarkdownBlock.NumberedItem })
+        assertTrue(blocks.any { it is com.example.grimm.ui.markdown.MarkdownBlock.Blockquote })
+        assertTrue(blocks.any { it is com.example.grimm.ui.markdown.MarkdownBlock.CodeBlock && it.language == "kotlin" })
+        assertTrue(blocks.any { it is com.example.grimm.ui.markdown.MarkdownBlock.Table })
+    }
 }
 

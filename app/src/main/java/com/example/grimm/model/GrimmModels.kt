@@ -7,9 +7,11 @@ enum class MessageSender {
 }
 
 enum class OutputStyle(val label: String, val promptInstruction: String) {
-    PARAGRAPH("Full Paragraphs", "Format your response in well-structured, comprehensive paragraphs."),
-    BULLET_POINTS("Bullet Points", "Format your response primarily using clear, concise bullet points."),
-    SHORT_SENTENCES("Short Sentences", "Format your response in brief, direct, punchy sentences without fluff.")
+    PARAGRAPH("Full Paragraphs", "Format your response in well-structured, comprehensive paragraphs with clear markdown formatting."),
+    BULLET_POINTS("Bullet Points", "Format your response primarily using clear, concise bullet points and bold highlights."),
+    SHORT_SENTENCES("Short Sentences", "Format your response in brief, direct, punchy sentences without fluff."),
+    CODE_BLOCKS("Code Blocks", "Format your response with rich code blocks including language identifiers (e.g. ```kotlin, ```python), syntax annotations, and structured technical explanations."),
+    TABLES("Tables & Data", "Format comparisons and structured data using clean Markdown tables (| Header | ... | with dividers) and formatted lists.")
 }
 
 enum class AssistantMode(val title: String, val subtitle: String) {
