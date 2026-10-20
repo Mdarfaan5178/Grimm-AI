@@ -286,75 +286,7 @@ fun GrimmAuthDialog(
 
                     Spacer(modifier = Modifier.height(10.dp))
 
-                    // Selected Google Profile Card
-                    Surface(
-                        shape = RoundedCornerShape(10.dp),
-                        color = Color(0xFFF1F5F9),
-                        border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Column(modifier = Modifier.padding(10.dp)) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(28.dp)
-                                            .clip(CircleShape)
-                                            .background(Color.White),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Icon(
-                                            painter = painterResource(id = R.drawable.ic_google_logo),
-                                            contentDescription = null,
-                                            tint = Color.Unspecified,
-                                            modifier = Modifier.size(16.dp)
-                                        )
-                                    }
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Column {
-                                        Text(
-                                            text = if (googleEmailInput.equals("mdarfaan5178@gmail.com", ignoreCase = true)) "MD Arfaan" else googleEmailInput.substringBefore("@"),
-                                            fontSize = 12.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            color = GrimmDarkBlue
-                                        )
-                                        Text(
-                                            text = googleEmailInput,
-                                            fontSize = 11.sp,
-                                            color = GrimmTextSecondary
-                                        )
-                                    }
-                                }
-                                TextButton(
-                                    onClick = { showEditGoogleEmail = !showEditGoogleEmail },
-                                    modifier = Modifier.padding(0.dp)
-                                ) {
-                                    Text(
-                                        text = if (showEditGoogleEmail) "Done" else "Switch",
-                                        fontSize = 11.sp,
-                                        color = GrimmLightBlue
-                                    )
-                                }
-                            }
-
-                            if (showEditGoogleEmail) {
-                                Spacer(modifier = Modifier.height(6.dp))
-                                OutlinedTextField(
-                                    value = googleEmailInput,
-                                    onValueChange = { googleEmailInput = it },
-                                    label = { Text("Google Account Email", fontSize = 11.sp) },
-                                    singleLine = true,
-                                    shape = RoundedCornerShape(8.dp),
-                                    textStyle = androidx.compose.ui.text.TextStyle(fontSize = 12.sp),
-                                    modifier = Modifier.fillMaxWidth()
-                                )
-                            }
-                        }
-                    }
+                    Spacer(modifier = Modifier.height(10.dp))
 
                     if (googleAuthError != null) {
                         Spacer(modifier = Modifier.height(8.dp))

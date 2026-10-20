@@ -1,3 +1,4 @@
+import java.time.Duration
 import com.google.gms.googleservices.GoogleServicesPlugin.MissingGoogleServicesStrategy
 
 plugins {
@@ -83,7 +84,6 @@ googleServices { missingGoogleServicesStrategy = MissingGoogleServicesStrategy.W
 // Some unused dependencies are commented out below instead of being removed.
 // This makes it easy to add them back in the future if needed.
 dependencies {
-implementation("com.github.javiersantos:AppUpdater:2.7")
 implementation(platform(libs.androidx.compose.bom))
   implementation(platform(libs.firebase.bom))
   // implementation(libs.accompanist.permissions)
@@ -110,7 +110,7 @@ implementation(platform(libs.androidx.compose.bom))
   implementation(libs.converter.moshi)
   implementation(libs.firebase.ai)
   // Uncomment to use Firestore:
-  // implementation(libs.firebase.firestore)
+    implementation(libs.firebase.firestore)
 
   // Jetpack Credential Manager and Google ID for Google Sign-In
   implementation(libs.androidx.credentials)

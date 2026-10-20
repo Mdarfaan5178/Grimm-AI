@@ -36,6 +36,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
@@ -83,7 +84,9 @@ fun GrimmSettingsDialog(
     onAutoTtsChange: (Boolean) -> Unit,
     onTestVoice: () -> Unit,
     onClearAllHistory: () -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    userName: String,
+    onUserNameChange: (String) -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
@@ -123,15 +126,10 @@ fun GrimmSettingsDialog(
                     Spacer(modifier = Modifier.width(10.dp))
                     Column {
                         Text(
-                            text = "Customization & Voice Settings",
+                            text = "Settings",
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
                             color = GrimmDarkBlue
-                        )
-                        Text(
-                            text = "Tune Grimm's intelligence, persona & voice engine",
-                            fontSize = 12.sp,
-                            color = GrimmTextSecondary
                         )
                     }
                 }
@@ -140,6 +138,24 @@ fun GrimmSettingsDialog(
                 }
             }
 
+            Spacer(modifier = Modifier.height(18.dp))
+
+            // Username Section
+            Text(
+                text = "USER PROFILE",
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold,
+                color = GrimmTextSecondary,
+                letterSpacing = 1.sp
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            OutlinedTextField(
+                value = userName,
+                onValueChange = onUserNameChange,
+                label = { Text("Display Name") },
+                modifier = Modifier.fillMaxWidth().testTag("username_edit_field")
+            )
+            
             Spacer(modifier = Modifier.height(18.dp))
 
             // AI Persona Section

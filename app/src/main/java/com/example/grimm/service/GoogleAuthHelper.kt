@@ -91,28 +91,15 @@ object GoogleAuthHelper {
             Log.d(TAG, "Device AccountManager query skipped: ${e.message}")
         }
 
-        // 3. Seamless Google Account authentication with active user identity
-        val targetEmail = if (!preferredEmail.isNullOrBlank()) {
-            preferredEmail.trim()
-        } else {
-            "mdarfaan5178@gmail.com"
-        }
+        return GoogleAuthResult.Error("Could not sign in with Google")
+    }
 
-        val targetName = if (!preferredName.isNullOrBlank()) {
-            preferredName.trim()
-        } else if (targetEmail.equals("mdarfaan5178@gmail.com", ignoreCase = true)) {
-            "MD Arfaan"
-        } else {
-            targetEmail.substringBefore("@")
-                .replace(".", " ")
-                .split(" ")
-                .joinToString(" ") { it.replaceFirstChar { c -> c.uppercase() } }
+    suspend fun signOut(context: Context) {
+        try {
+            val credentialManager = CredentialManager.create(context)
+            credentialManager.clearCredentialState(androidx.credentials.ClearCredentialStateRequest())
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to sign out: ${e.message}")
         }
-
-        return GoogleAuthResult.Success(
-            displayName = targetName,
-            email = targetEmail,
-            avatarUrl = null
-        )
     }
 }

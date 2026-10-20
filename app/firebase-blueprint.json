@@ -1,0 +1,17 @@
+{
+  "collections": {
+    "users": {
+      "path": "users/{userId}",
+      "fields": {
+        "username": "string",
+        "email": "string"
+      }
+    },
+    "usernames": {
+      "path": "usernames/{username}",
+      "fields": {
+        "userId": "string"
+      }
+    }
+  }
+}

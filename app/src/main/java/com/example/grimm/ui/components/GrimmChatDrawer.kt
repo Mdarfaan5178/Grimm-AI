@@ -21,6 +21,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.ChatBubbleOutline
 import androidx.compose.material.icons.filled.AutoFixHigh
 import androidx.compose.material.icons.filled.Close
@@ -437,54 +438,14 @@ fun GrimmChatDrawerContent(
                                 modifier = Modifier
                                     .size(36.dp)
                                     .clip(CircleShape)
-                                    .background(if (isSignedIn && isGoogleSignIn) Color.White else if (isSignedIn) GrimmLightBlue else GrimmBorder),
+                                    .background(if (isSignedIn) GrimmLightBlue else GrimmBorder),
                                 contentAlignment = Alignment.Center
                             ) {
-                                if (isSignedIn && isGoogleSignIn) {
-                                    Icon(
-                                        painter = painterResource(id = R.drawable.ic_google_logo),
-                                        contentDescription = "Google Account",
-                                        tint = Color.Unspecified,
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                } else {
-                                    Text(
-                                        text = if (isSignedIn) userName.take(1).uppercase() else "G",
-                                        color = if (isSignedIn) Color.White else GrimmTextSecondary,
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 16.sp
-                                    )
-                                }
-                            }
-                            Spacer(modifier = Modifier.width(10.dp))
-                            Column {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Text(
-                                        text = if (isSignedIn) userName else "Guest User",
-                                        fontSize = 13.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = GrimmDarkBlue
-                                    )
-                                    if (isSignedIn && isGoogleSignIn) {
-                                        Spacer(modifier = Modifier.width(4.dp))
-                                        Surface(
-                                            color = Color(0xFFE8F0FE),
-                                            shape = RoundedCornerShape(4.dp)
-                                        ) {
-                                            Text(
-                                                text = "Google",
-                                                fontSize = 9.sp,
-                                                fontWeight = FontWeight.Bold,
-                                                color = Color(0xFF1A73E8),
-                                                modifier = Modifier.padding(horizontal = 3.dp, vertical = 1.dp)
-                                            )
-                                        }
-                                    }
-                                }
-                                Text(
-                                    text = if (isSignedIn) userEmail else "Chats not synced",
-                                    fontSize = 11.sp,
-                                    color = GrimmTextSecondary
+                                Icon(
+                                    imageVector = Icons.Default.AccountCircle,
+                                    contentDescription = "User Account",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(24.dp)
                                 )
                             }
                         }

@@ -229,6 +229,10 @@ class GrimmViewModel(application: Application) : AndroidViewModel(application) {
         _uiState.value = _uiState.value.copy(userInput = input)
     }
 
+    fun updateUserName(newName: String) {
+        repository.updateUserName(newName)
+    }
+
     fun setImagePrompt(prompt: String) {
         _uiState.value = _uiState.value.copy(imagePrompt = prompt)
     }
@@ -324,7 +328,8 @@ class GrimmViewModel(application: Application) : AndroidViewModel(application) {
             _uiState.value = _uiState.value.copy(isSigningInWithGoogle = true, googleAuthError = null)
             // Add a brief subtle delay for a realistic native sign-in transition
             kotlinx.coroutines.delay(250)
-            when (val result = GoogleAuthHelper.signInWithGoogle(context, preferredEmail = preferredEmail, preferredName = preferredName)) {
+            val webClientId = "760858662628-uqsfdq7rja3mbjfea16trtuclb5d0dnp.apps.googleusercontent.com"
+            when (val result = GoogleAuthHelper.signInWithGoogle(context, webClientId = webClientId, preferredEmail = preferredEmail, preferredName = preferredName)) {
                 is GoogleAuthResult.Success -> {
                     repository.setSignedIn(
                         signedIn = true,

@@ -41,6 +41,11 @@ class ChatRepository(context: Context) {
         loadPersistedSessions()
     }
 
+    fun updateUserName(newName: String) {
+        _userName.value = newName
+        prefs.edit().putString("user_name", newName).apply()
+    }
+
     fun setSignedIn(
         signedIn: Boolean,
         name: String = "Grimm Scholar",

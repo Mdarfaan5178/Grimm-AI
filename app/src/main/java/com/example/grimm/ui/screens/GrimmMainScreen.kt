@@ -158,7 +158,9 @@ fun GrimmMainScreen(
                 viewModel.clearAllSavedChats()
                 viewModel.setShowSettingsDialog(false)
             },
-            onDismiss = { viewModel.setShowSettingsDialog(false) }
+            onDismiss = { viewModel.setShowSettingsDialog(false) },
+            userName = userName,
+            onUserNameChange = { viewModel.updateUserName(it) }
         )
     }
 
