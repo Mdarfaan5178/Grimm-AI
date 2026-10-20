@@ -98,15 +98,16 @@ fun GrimmTopBar(
                     ) {
                         Box(
                             modifier = Modifier
-                                .size(32.dp)
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(GrimmLightBlue),
+                                .size(34.dp)
+                                .clip(RoundedCornerShape(9.dp))
+                                .background(Color(0xFF0F172A))
+                                .border(1.dp, GrimmCyan.copy(alpha = 0.6f), RoundedCornerShape(9.dp)),
                             contentAlignment = Alignment.Center
                         ) {
                             androidx.compose.foundation.Image(
                                 painter = painterResource(id = R.drawable.grimm),
-                                contentDescription = "Grimm Logo",
-                                contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                                contentDescription = "Grimm AI Logo",
+                                contentScale = androidx.compose.ui.layout.ContentScale.Fit,
                                 modifier = Modifier
                                     .size(32.dp)
                                     .clip(RoundedCornerShape(8.dp))

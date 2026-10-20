@@ -56,6 +56,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.painterResource
+import com.example.R
 import coil.compose.SubcomposeAsyncImage
 import com.example.grimm.model.ChatMessage
 import com.example.grimm.model.MessageSender
@@ -91,19 +94,22 @@ fun GrimmMessageItem(
         horizontalArrangement = if (isUser) Arrangement.End else Arrangement.Start
     ) {
         if (!isUser) {
-            // Grimm AI Avatar
+            // Grimm AI Avatar with custom logo
             Box(
                 modifier = Modifier
                     .size(34.dp)
                     .clip(CircleShape)
-                    .background(GrimmDarkBlue),
+                    .background(GrimmDarkBlue)
+                    .border(1.dp, GrimmCyan.copy(alpha = 0.6f), CircleShape),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    imageVector = Icons.Default.AutoAwesome,
+                Image(
+                    painter = painterResource(id = R.drawable.grimm),
                     contentDescription = "Grimm AI Avatar",
-                    tint = GrimmCyan,
-                    modifier = Modifier.size(18.dp)
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .size(34.dp)
+                        .clip(CircleShape)
                 )
             }
             Spacer(modifier = Modifier.width(8.dp))

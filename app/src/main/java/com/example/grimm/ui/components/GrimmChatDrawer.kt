@@ -2,6 +2,7 @@ package com.example.grimm.ui.components
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -103,24 +104,47 @@ fun GrimmChatDrawerContent(
                 .fillMaxHeight()
                 .padding(16.dp)
         ) {
-            // Header with title and close button
+            // Header with logo, title and close button
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Column {
-                    Text(
-                        text = "Saved Chats",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = GrimmDarkBlue
-                    )
-                    Text(
-                        text = if (isSignedIn) "History synced with account" else "Guest mode: Volatile sessions",
-                        fontSize = 11.sp,
-                        color = GrimmTextSecondary
-                    )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(GrimmDarkBlue)
+                            .border(1.dp, GrimmCyan.copy(alpha = 0.6f), RoundedCornerShape(10.dp)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.grimm),
+                            contentDescription = "Grimm AI Logo",
+                            contentScale = androidx.compose.ui.layout.ContentScale.Fit,
+                            modifier = Modifier
+                                .size(34.dp)
+                                .clip(RoundedCornerShape(9.dp))
+                        )
+                    }
+                    Column {
+                        Text(
+                            text = "Saved Chats",
+                            fontSize = 17.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = GrimmDarkBlue
+                        )
+                        Text(
+                            text = if (isSignedIn) "Synced with account" else "Guest mode: Volatile",
+                            fontSize = 11.sp,
+                            color = GrimmTextSecondary
+                        )
+                    }
                 }
                 if (onCloseClick != null) {
                     IconButton(

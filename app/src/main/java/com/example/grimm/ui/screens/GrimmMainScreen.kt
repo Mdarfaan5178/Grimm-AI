@@ -542,16 +542,25 @@ fun GrimmChatContent(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {
-                        // Hero banner art
-                        Image(
-                            painter = painterResource(id = R.drawable.grimm),
-                            contentDescription = "Grimm AI Hero Banner",
-                            contentScale = ContentScale.Crop,
+                        // Centered Grimm AI Logo Emblem
+                        Box(
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .height(160.dp)
-                                .clip(RoundedCornerShape(16.dp))
-                        )
+                                .size(110.dp)
+                                .clip(RoundedCornerShape(24.dp))
+                                .background(GrimmDarkBlue)
+                                .border(2.dp, GrimmCyan.copy(alpha = 0.8f), RoundedCornerShape(24.dp))
+                                .padding(4.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Image(
+                                painter = painterResource(id = R.drawable.grimm),
+                                contentDescription = "Grimm AI Logo",
+                                contentScale = ContentScale.Fit,
+                                modifier = Modifier
+                                    .size(102.dp)
+                                    .clip(RoundedCornerShape(20.dp))
+                            )
+                        }
 
                         Spacer(modifier = Modifier.height(16.dp))
 

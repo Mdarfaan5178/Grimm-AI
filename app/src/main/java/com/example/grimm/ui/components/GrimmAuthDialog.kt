@@ -110,11 +110,13 @@ fun GrimmAuthDialog(
                                 modifier = Modifier.size(20.dp)
                             )
                         } else {
-                            Icon(
-                                imageVector = Icons.Default.AccountCircle,
-                                contentDescription = null,
-                                tint = GrimmCyan,
-                                modifier = Modifier.size(22.dp)
+                            androidx.compose.foundation.Image(
+                                painter = painterResource(id = R.drawable.grimm),
+                                contentDescription = "Grimm AI Logo",
+                                contentScale = androidx.compose.ui.layout.ContentScale.Fit,
+                                modifier = Modifier
+                                    .size(32.dp)
+                                    .clip(RoundedCornerShape(7.dp))
                             )
                         }
                     }
