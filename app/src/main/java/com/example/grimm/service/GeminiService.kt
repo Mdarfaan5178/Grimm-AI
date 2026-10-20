@@ -1,5 +1,6 @@
 package com.example.grimm.service
 
+import android.content.Context
 import android.util.Log
 import com.example.BuildConfig
 import com.example.grimm.model.AiPersona
@@ -225,8 +226,16 @@ class GeminiService {
         imageBase64: String? = null,
         imageMimeType: String = "image/jpeg",
         conversationHistory: List<Pair<String, String>> = emptyList(),
-        searchContext: List<com.example.grimm.model.WebSearchResult>? = null
+        searchContext: List<com.example.grimm.model.WebSearchResult>? = null,
+        context: Context? = null
     ): String = withContext(Dispatchers.IO) {
+        if (context != null && !NetworkUtils.isNetworkAvailable(context)) {
+            return@withContext NetworkUtils.NO_NETWORK_MESSAGE
+        }
+        if (NetworkUtils.forceNetworkUnavailableForTesting == true) {
+            return@withContext NetworkUtils.NO_NETWORK_MESSAGE
+        }
+
         if (isWhoIsReaperQuery(prompt)) {
             return@withContext getWhoIsReaperResponse(style, searchContext)
         }
@@ -260,6 +269,9 @@ class GeminiService {
                 )
             } catch (e: Exception) {
                 Log.e("GeminiService", "Gemini API calls failed: ${e.message}", e)
+                if (NetworkUtils.isNetworkException(e)) {
+                    return@withContext NetworkUtils.NO_NETWORK_MESSAGE
+                }
                 return@withContext generateIntelligentFallback(prompt, persona, tone, style, imageBase64 != null, e.message, searchContext)
             }
         }
@@ -531,6 +543,21 @@ class GeminiService {
         apiNotice: String?,
         searchContext: List<com.example.grimm.model.WebSearchResult>? = null
     ): String {
+        if (apiNotice != null) {
+            val noticeLower = apiNotice.lowercase()
+            if (noticeLower.contains("network") ||
+                noticeLower.contains("unable to resolve host") ||
+                noticeLower.contains("failed to connect") ||
+                noticeLower.contains("offline") ||
+                noticeLower.contains("timeout") ||
+                noticeLower.contains("unreachable") ||
+                noticeLower.contains("connection refused") ||
+                noticeLower.contains("no route to host")
+            ) {
+                return NetworkUtils.NO_NETWORK_MESSAGE
+            }
+        }
+
         val lower = prompt.lowercase()
         val personaPrefix = when (persona) {
             AiPersona.GRIMM_NARRATOR -> "From the shadowed chronicles of Grimm:\n"

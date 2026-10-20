@@ -22,6 +22,7 @@ import com.example.grimm.service.GrimmWebSearchService
 import com.example.grimm.service.ImageAspectRatio
 import com.example.grimm.service.ImageGenService
 import com.example.grimm.service.ImageStyle
+import com.example.grimm.service.NetworkUtils
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -446,6 +447,34 @@ class GrimmViewModel(application: Application) : AndroidViewModel(application) {
             isWebSearch = isSearching
         )
 
+        // Offline check: immediately respond with custom network message without copy-pasting canned fallback
+        if (!NetworkUtils.isNetworkAvailable(getApplication())) {
+            val assistantMsg = ChatMessage(
+                id = UUID.randomUUID().toString(),
+                sender = MessageSender.ASSISTANT,
+                text = NetworkUtils.NO_NETWORK_MESSAGE,
+                timestamp = System.currentTimeMillis() + 1,
+                outputStyle = _uiState.value.outputStyle,
+                isTemporary = _uiState.value.currentMode == AssistantMode.TEMPORARY
+            )
+            val finalMessages = _uiState.value.messages + userMessage + assistantMsg
+            _uiState.value = _uiState.value.copy(
+                messages = finalMessages,
+                userInput = "",
+                attachedImageUri = null,
+                attachedImageBase64 = null,
+                isLoading = false,
+                searchStatusMessage = null
+            )
+            if (_uiState.value.currentMode == AssistantMode.NORMAL) {
+                persistCurrentSession()
+            }
+            if (_uiState.value.autoTts) {
+                voiceManager.speak(NetworkUtils.NO_NETWORK_MESSAGE)
+            }
+            return
+        }
+
         val updatedMessages = _uiState.value.messages + userMessage
         _uiState.value = _uiState.value.copy(
             messages = updatedMessages,
@@ -469,6 +498,29 @@ class GrimmViewModel(application: Application) : AndroidViewModel(application) {
                     webResults = webSearchService.searchWeb(cleanSearchQuery)
                 } catch (e: Exception) {
                     android.util.Log.e("GrimmViewModel", "Web search failed", e)
+                    if (NetworkUtils.isNetworkException(e) || !NetworkUtils.isNetworkAvailable(getApplication())) {
+                        val assistantMsg = ChatMessage(
+                            id = UUID.randomUUID().toString(),
+                            sender = MessageSender.ASSISTANT,
+                            text = NetworkUtils.NO_NETWORK_MESSAGE,
+                            timestamp = System.currentTimeMillis(),
+                            outputStyle = _uiState.value.outputStyle,
+                            isTemporary = _uiState.value.currentMode == AssistantMode.TEMPORARY
+                        )
+                        val finalMessages = _uiState.value.messages + assistantMsg
+                        _uiState.value = _uiState.value.copy(
+                            messages = finalMessages,
+                            isLoading = false,
+                            searchStatusMessage = null
+                        )
+                        if (_uiState.value.currentMode == AssistantMode.NORMAL) {
+                            persistCurrentSession()
+                        }
+                        if (_uiState.value.autoTts) {
+                            voiceManager.speak(NetworkUtils.NO_NETWORK_MESSAGE)
+                        }
+                        return@launch
+                    }
                 }
             }
 
@@ -481,15 +533,24 @@ class GrimmViewModel(application: Application) : AndroidViewModel(application) {
                     if (u != null && a != null) Pair(u, a) else null
                 }
 
-            val responseText = geminiService.generateResponse(
-                prompt = if (text.isNotBlank()) text else "Analyze this image",
-                persona = _uiState.value.persona,
-                tone = _uiState.value.tone,
-                style = _uiState.value.outputStyle,
-                imageBase64 = attachedBase64,
-                conversationHistory = historyPairs,
-                searchContext = if (webResults.isNotEmpty()) webResults else null
-            )
+            val responseText = try {
+                geminiService.generateResponse(
+                    prompt = if (text.isNotBlank()) text else "Analyze this image",
+                    persona = _uiState.value.persona,
+                    tone = _uiState.value.tone,
+                    style = _uiState.value.outputStyle,
+                    imageBase64 = attachedBase64,
+                    conversationHistory = historyPairs,
+                    searchContext = if (webResults.isNotEmpty()) webResults else null,
+                    context = getApplication()
+                )
+            } catch (e: Exception) {
+                if (NetworkUtils.isNetworkException(e) || !NetworkUtils.isNetworkAvailable(getApplication())) {
+                    NetworkUtils.NO_NETWORK_MESSAGE
+                } else {
+                    "Error generating response: ${e.message ?: "Unknown"}"
+                }
+            }
 
             val assistantMsg = ChatMessage(
                 id = UUID.randomUUID().toString(),
@@ -531,6 +592,30 @@ class GrimmViewModel(application: Application) : AndroidViewModel(application) {
             timestamp = System.currentTimeMillis(),
             isTemporary = _uiState.value.currentMode == AssistantMode.TEMPORARY
         )
+
+        // Offline check for image synthesis
+        if (!NetworkUtils.isNetworkAvailable(getApplication())) {
+            val assistantMsg = ChatMessage(
+                id = UUID.randomUUID().toString(),
+                sender = MessageSender.ASSISTANT,
+                text = NetworkUtils.NO_NETWORK_MESSAGE,
+                timestamp = System.currentTimeMillis() + 1,
+                isTemporary = _uiState.value.currentMode == AssistantMode.TEMPORARY
+            )
+            val updated = _uiState.value.messages + userMessage + assistantMsg
+            _uiState.value = _uiState.value.copy(
+                messages = updated,
+                imagePrompt = "",
+                isLoading = false
+            )
+            if (_uiState.value.currentMode == AssistantMode.NORMAL) {
+                persistCurrentSession()
+            }
+            if (_uiState.value.autoTts) {
+                voiceManager.speak(NetworkUtils.NO_NETWORK_MESSAGE)
+            }
+            return
+        }
 
         val imageUrl = ImageGenService.constructImageUrl(
             userPrompt = cleanPrompt,

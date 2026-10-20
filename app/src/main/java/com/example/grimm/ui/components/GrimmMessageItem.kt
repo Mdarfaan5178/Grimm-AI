@@ -97,18 +97,18 @@ fun GrimmMessageItem(
             // Grimm AI Avatar with custom logo
             Box(
                 modifier = Modifier
-                    .size(34.dp)
+                    .size(36.dp)
                     .clip(CircleShape)
-                    .background(GrimmDarkBlue)
+                    .background(Color(0xFF0F172A))
                     .border(1.dp, GrimmCyan.copy(alpha = 0.6f), CircleShape),
                 contentAlignment = Alignment.Center
             ) {
                 Image(
                     painter = painterResource(id = R.drawable.grimm),
                     contentDescription = "Grimm AI Avatar",
-                    contentScale = ContentScale.Crop,
+                    contentScale = ContentScale.Fit,
                     modifier = Modifier
-                        .size(34.dp)
+                        .size(32.dp)
                         .clip(CircleShape)
                 )
             }

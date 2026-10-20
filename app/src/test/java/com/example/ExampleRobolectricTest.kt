@@ -332,5 +332,53 @@ class ExampleRobolectricTest {
         assertTrue(blocks.any { it is com.example.grimm.ui.markdown.MarkdownBlock.CodeBlock && it.language == "kotlin" })
         assertTrue(blocks.any { it is com.example.grimm.ui.markdown.MarkdownBlock.Table })
     }
+
+    @Test
+    fun `test network unavailable returns custom Sonion message`() {
+        val app = ApplicationProvider.getApplicationContext<Application>()
+        val viewModel = GrimmViewModel(app)
+
+        try {
+            com.example.grimm.service.NetworkUtils.forceNetworkUnavailableForTesting = true
+
+            viewModel.setUserInput("Help me build a web scraper")
+            viewModel.sendMessage()
+
+            val lastMsg = viewModel.uiState.value.messages.lastOrNull()
+            assertNotNull(lastMsg)
+            assertEquals(com.example.grimm.service.NetworkUtils.NO_NETWORK_MESSAGE, lastMsg?.text)
+            assertEquals("Sonion, how do you expect me to work without network? 😭", lastMsg?.text)
+        } finally {
+            com.example.grimm.service.NetworkUtils.forceNetworkUnavailableForTesting = null
+        }
+    }
+
+    @Test
+    fun `test GeminiService offline check returns Sonion message`() = kotlinx.coroutines.runBlocking {
+        val service = com.example.grimm.service.GeminiService()
+        try {
+            com.example.grimm.service.NetworkUtils.forceNetworkUnavailableForTesting = true
+            val response = service.generateResponse(
+                prompt = "Tell me about quantum computing",
+                persona = AiPersona.GENERAL,
+                tone = AiTone.FRIENDLY,
+                style = OutputStyle.PARAGRAPH
+            )
+            assertEquals("Sonion, how do you expect me to work without network? 😭", response)
+        } finally {
+            com.example.grimm.service.NetworkUtils.forceNetworkUnavailableForTesting = null
+        }
+    }
+
+    @Test
+    fun `test network exception detection detects connection failures`() {
+        val unknownHost = java.net.UnknownHostException("Unable to resolve host generativelanguage.googleapis.com")
+        val socketTimeout = java.net.SocketTimeoutException("Connect timed out")
+        val genericError = java.lang.IllegalStateException("JSON parsing error")
+
+        assertTrue(com.example.grimm.service.NetworkUtils.isNetworkException(unknownHost))
+        assertTrue(com.example.grimm.service.NetworkUtils.isNetworkException(socketTimeout))
+        assertFalse(com.example.grimm.service.NetworkUtils.isNetworkException(genericError))
+    }
 }
 
